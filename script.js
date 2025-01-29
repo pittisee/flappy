@@ -3,105 +3,115 @@ const pipesContainer = document.getElementById("pipes");
 const scoreDisplay = document.getElementById("score");
 const highscoreDisplay = document.getElementById("highscore");
 
-let birdTop = 250;
-let gravity = 0.6;
+let birdTop = 300;
+let gravity = 0.5;
 let velocity = 0;
 let gameInterval;
 let pipeInterval;
 let score = 0;
-let highscore = 0;
+let highscore = localStorage.getItem("flappyHighscore") || 0;
+highscoreDisplay.textContent = `High Score: ${highscore}`;
 
 // Jump function
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
+    e.preventDefault();
     velocity = -10;
   }
 });
 
-// Update bird position
+// Mobile tap support
+document.addEventListener("click", () => {
+  velocity = -10;
+});
+
 function updateBird() {
   velocity += gravity;
   birdTop += velocity;
-  bird.style.top = birdTop + "px";
+  bird.style.top = `${birdTop}px`;
 
-  // Check for collision with ground or sky
-  if (birdTop < 0 || birdTop > 560) {
+  // Ground collision
+  if (birdTop > 560) {
     endGame();
   }
 }
 
-// Create pipes
 function createPipe() {
   const pipeGap = 150;
-  const pipeHeight = Math.floor(Math.random() * (400 - 100)) + 100;
+  const minHeight = 50;
+  const maxHeight = 350;
+  const pipeHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
 
   const topPipe = document.createElement("div");
   topPipe.className = "pipe";
-  topPipe.style.height = pipeHeight + "px";
+  topPipe.style.height = `${pipeHeight}px`;
   topPipe.style.top = "0";
-  topPipe.style.left = "400px";
 
   const bottomPipe = document.createElement("div");
   bottomPipe.className = "pipe";
-  bottomPipe.style.height = (600 - pipeHeight - pipeGap) + "px";
+  bottomPipe.style.height = `${600 - pipeHeight - pipeGap}px`;
   bottomPipe.style.bottom = "0";
-  bottomPipe.style.left = "400px";
 
   pipesContainer.appendChild(topPipe);
   pipesContainer.appendChild(bottomPipe);
 
-  // Move pipes
   let pipeLeft = 400;
   const pipeMoveInterval = setInterval(() => {
     pipeLeft -= 2;
-    topPipe.style.left = pipeLeft + "px";
-    bottomPipe.style.left = pipeLeft + "px";
+    topPipe.style.left = `${pipeLeft}px`;
+    bottomPipe.style.left = `${pipeLeft}px`;
 
-    // Check for collision with bird
+    // Collision detection
     if (
-      pipeLeft < 90 &&
+      pipeLeft < 90 && 
       pipeLeft > 50 &&
       (birdTop < pipeHeight || birdTop > pipeHeight + pipeGap - 40)
     ) {
       endGame();
     }
 
-    // Remove pipes when they go off screen
-    if (pipeLeft < -60) {
-      clearInterval(pipeMoveInterval);
-      pipesContainer.removeChild(topPipe);
-      pipesContainer.removeChild(bottomPipe);
+    // Score increment
+    if (pipeLeft === 50) {
       score++;
-      scoreDisplay.textContent = "Score: " + score;
+      scoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    // Remove pipes
+    if (pipeLeft < -60) {
+      topPipe.remove();
+      bottomPipe.remove();
+      clearInterval(pipeMoveInterval);
     }
   }, 20);
 }
 
-// End game
 function endGame() {
   clearInterval(gameInterval);
   clearInterval(pipeInterval);
-  alert("Game Over! Your score: " + score);
-
-  // Update highscore
+  document.querySelectorAll(".pipe").forEach(pipe => pipe.remove());
+  
   if (score > highscore) {
     highscore = score;
-    highscoreDisplay.textContent = "High Score: " + highscore;
+    localStorage.setItem("flappyHighscore", highscore);
+    highscoreDisplay.textContent = `High Score: ${highscore}`;
   }
+  
+  alert(`Game Over! Score: ${score}\nPress OK to restart`);
+  resetGame();
+}
 
-  // Reset game
+function resetGame() {
+  birdTop = 300;
+  velocity = 0;
   score = 0;
-  scoreDisplay.textContent = "Score: " + score;
-  birdTop = 250;
-  bird.style.top = birdTop + "px";
-  pipesContainer.innerHTML = "";
+  scoreDisplay.textContent = "Score: 0";
+  bird.style.top = "300px";
   startGame();
 }
 
-// Start game
 function startGame() {
   gameInterval = setInterval(updateBird, 20);
-  pipeInterval = setInterval(createPipe, 2000);
+  pipeInterval = setInterval(createPipe, 1500);
 }
 
 startGame();
