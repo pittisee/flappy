@@ -19,12 +19,11 @@ function checkCollision(element1, element2) {
   const rect1 = element1.getBoundingClientRect();
   const rect2 = element2.getBoundingClientRect();
 
-  // Adjust for 2px border buffer
   return !(
-    rect1.right - 2 < rect2.left + 2 ||
-    rect1.left + 2 > rect2.right - 2 ||
-    rect1.bottom - 2 < rect2.top + 2 ||
-    rect1.top + 2 > rect2.bottom - 2
+    rect1.right < rect2.left ||
+    rect1.left > rect2.right ||
+    rect1.bottom < rect2.top ||
+    rect1.top > rect2.bottom
   );
 }
 
@@ -46,9 +45,16 @@ function updateBird() {
 
   velocity += gravity;
   birdTop += velocity;
+
+  // Prevent bird from flying out of the top
+  if (birdTop < 0) {
+    birdTop = 0;
+    velocity = 0;
+  }
+
   bird.style.top = `${birdTop}px`;
 
-  // Ground collision with buffer
+  // Ground collision
   if (birdTop >= 542) {
     console.log("Ground collision detected!");
     endGame();
@@ -67,11 +73,13 @@ function createPipe() {
   topPipe.className = "pipe";
   topPipe.style.height = `${pipeHeight}px`;
   topPipe.style.top = "0";
+  topPipe.style.right = "-60px"; // Start off-screen to the right
 
   const bottomPipe = document.createElement("div");
   bottomPipe.className = "pipe";
   bottomPipe.style.height = `${600 - pipeHeight - pipeGap}px`;
   bottomPipe.style.bottom = "0";
+  bottomPipe.style.right = "-60px"; // Start off-screen to the right
 
   pipesContainer.appendChild(topPipe);
   pipesContainer.appendChild(bottomPipe);
@@ -86,8 +94,8 @@ function createPipe() {
     }
 
     pipeLeft -= 2;
-    topPipe.style.left = `${pipeLeft}px`;
-    bottomPipe.style.left = `${pipeLeft}px`;
+    topPipe.style.right = `${-pipeLeft}px`;
+    bottomPipe.style.right = `${-pipeLeft}px`;
 
     // Check for collision with bird
     if (checkCollision(bird, topPipe) || checkCollision(bird, bottomPipe)) {
