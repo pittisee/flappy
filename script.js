@@ -8,9 +8,10 @@ let gravity = 0.5;
 let velocity = 0;
 let gameInterval;
 let pipeInterval;
+let pipeIntervals = []; // Track all pipe movement intervals
 let score = 0;
 let highscore = localStorage.getItem("flappyHighscore") || 0;
-let isGameOver = false; // New flag to prevent multiple game overs
+let isGameOver = false;
 
 highscoreDisplay.textContent = `High Score: ${highscore}`;
 
@@ -30,20 +31,20 @@ document.addEventListener("click", () => {
 });
 
 function updateBird() {
-  if (isGameOver) return; // Don't update if game is over
+  if (isGameOver) return;
 
   velocity += gravity;
   birdTop += velocity;
   bird.style.top = `${birdTop}px`;
 
   // Ground collision
-  if (birdTop > 560) {
+  if (birdTop > 540) { // Adjusted to match ground height
     endGame();
   }
 }
 
 function createPipe() {
-  if (isGameOver) return; // Don't create pipes if game is over
+  if (isGameOver) return;
 
   const pipeGap = 150;
   const minHeight = 50;
@@ -89,35 +90,46 @@ function createPipe() {
       scoreDisplay.textContent = `Score: ${score}`;
     }
 
-    // Remove pipes
+    // Remove pipes when off-screen
     if (pipeLeft < -60) {
       topPipe.remove();
       bottomPipe.remove();
       clearInterval(pipeMoveInterval);
+      const index = pipeIntervals.indexOf(pipeMoveInterval);
+      if (index > -1) pipeIntervals.splice(index, 1);
     }
   }, 20);
+
+  pipeIntervals.push(pipeMoveInterval);
 }
 
 function endGame() {
-  if (isGameOver) return; // Prevent multiple triggers
+  if (isGameOver) return;
   isGameOver = true;
 
+  // Clear all intervals
   clearInterval(gameInterval);
   clearInterval(pipeInterval);
+  pipeIntervals.forEach(interval => clearInterval(interval));
+  pipeIntervals = [];
+
+  // Remove all pipes
   document.querySelectorAll(".pipe").forEach(pipe => pipe.remove());
 
+  // Update highscore
   if (score > highscore) {
     highscore = score;
     localStorage.setItem("flappyHighscore", highscore);
     highscoreDisplay.textContent = `High Score: ${highscore}`;
   }
 
+  // Reset game after alert
   alert(`Game Over! Score: ${score}\nPress OK to restart`);
   resetGame();
 }
 
 function resetGame() {
-  isGameOver = false; // Reset the flag
+  isGameOver = false;
   birdTop = 300;
   velocity = 0;
   score = 0;
@@ -127,6 +139,9 @@ function resetGame() {
 }
 
 function startGame() {
+  // Clear existing intervals (if any)
+  clearInterval(gameInterval);
+  clearInterval(pipeInterval);
   gameInterval = setInterval(updateBird, 20);
   pipeInterval = setInterval(createPipe, 1500);
 }
