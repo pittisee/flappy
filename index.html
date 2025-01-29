@@ -15,6 +15,7 @@
             justify-content: center;
             height: 100vh;
             align-items: center;
+            position: relative;
         }
         canvas {
             touch-action: none;
@@ -47,15 +48,17 @@
         }
         #highscore {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 2%;
+            right: 2%;
             color: white;
-            font-size: 1.5em;
+            font-size: 1.2em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            transform: translateX(0);
         }
         @media (max-width: 600px) {
             .overlay h1 { font-size: 2em; }
             #restart-button { font-size: 1em; }
+            #highscore { font-size: 1em; }
         }
     </style>
 </head>
@@ -84,6 +87,7 @@
             const minDimension = Math.min(container.clientWidth, container.clientHeight * 0.9);
             canvas.width = minDimension;
             canvas.height = minDimension * (4/3);
+            updateGameScale();
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -104,7 +108,6 @@
             PIPE_WIDTH = canvas.width * PIPE_WIDTH_RATIO;
             BIRD_RADIUS = canvas.width * BIRD_RADIUS_RATIO;
         }
-        updateGameScale();
 
         // Game State
         let bird = { x: 0, y: 0, velocity: 0 };
@@ -150,13 +153,17 @@
             }
         }
 
-        // Initialize game objects
         function initializeGame() {
-            bird.x = canvas.width * 0.2;
-            bird.y = canvas.height / 2;
+            bird = {
+                x: canvas.width * 0.2,
+                y: canvas.height / 2,
+                velocity: 0
+            };
             pipes = [];
             clouds = Array.from({ length: CLOUD_COUNT }, () => new Cloud());
-            updateGameScale();
+            score = 0;
+            lastTime = 0;
+            lastPipeSpawnTime = 0;
             highscoreDisplay.textContent = `High Score: ${highscore}`;
         }
 
@@ -165,6 +172,7 @@
             if (gameState === 'start') {
                 gameState = 'playing';
                 startScreen.style.display = 'none';
+                lastTime = performance.now();
                 requestAnimationFrame(gameLoop);
             } else if (gameState === 'playing') {
                 bird.velocity = JUMP_FORCE;
@@ -181,11 +189,12 @@
             gameOverScreen.style.display = 'none';
             initializeGame();
             gameState = 'playing';
-            score = 0;
+            lastTime = performance.now();
             requestAnimationFrame(gameLoop);
         });
 
         function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
             const deltaTime = (timestamp - lastTime) / 1000;
             lastTime = timestamp;
 
@@ -214,8 +223,9 @@
                 lastPipeSpawnTime = currentTime;
             }
 
-            pipes.forEach(pipe => {
+            pipes.forEach((pipe, index) => {
                 pipe.x -= PIPE_SPEED * deltaTime;
+                
                 if (!pipe.scored && bird.x > pipe.x + PIPE_WIDTH) {
                     pipe.scored = true;
                     score++;
@@ -225,11 +235,21 @@
 
                 // Collision detection
                 const topPipe = { x: pipe.x, y: 0, width: PIPE_WIDTH, height: pipe.gapY };
-                const bottomPipe = { x: pipe.x, y: pipe.gapY + PIPE_GAP, width: PIPE_WIDTH, 
-                                  height: canvas.height - pipe.gapY - PIPE_GAP };
+                const bottomPipe = { 
+                    x: pipe.x, 
+                    y: pipe.gapY + PIPE_GAP, 
+                    width: PIPE_WIDTH, 
+                    height: canvas.height - pipe.gapY - PIPE_GAP 
+                };
+                
                 if (circleRectCollision(bird.x, bird.y, BIRD_RADIUS, topPipe) || 
                     circleRectCollision(bird.x, bird.y, BIRD_RADIUS, bottomPipe)) {
                     gameOver();
+                }
+
+                // Remove off-screen pipes
+                if (pipe.x + PIPE_WIDTH < 0) {
+                    pipes.splice(index, 1);
                 }
             });
 
