@@ -78,6 +78,7 @@ function createPipe() {
 
   let pipeLeft = 400;
   let scored = false;
+
   const pipeMoveInterval = setInterval(() => {
     if (isGameOver) {
       clearInterval(pipeMoveInterval);
@@ -88,17 +89,20 @@ function createPipe() {
     topPipe.style.left = `${pipeLeft}px`;
     bottomPipe.style.left = `${pipeLeft}px`;
 
+    // Check for collision with bird
     if (checkCollision(bird, topPipe) || checkCollision(bird, bottomPipe)) {
       console.log("Pipe collision detected!");
       endGame();
     }
 
-    if (!scored && pipeLeft < 50 - 2) {
+    // Increment score if the bird passes the pipes
+    if (!scored && pipeLeft < 50) {
       score++;
       scored = true;
       scoreDisplay.textContent = `Score: ${score}`;
     }
 
+    // Remove pipes when they go off-screen
     if (pipeLeft < -60) {
       topPipe.remove();
       bottomPipe.remove();
