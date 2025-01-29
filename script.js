@@ -15,7 +15,6 @@ let isGameOver = false;
 
 highscoreDisplay.textContent = `High Score: ${highscore}`;
 
-// Collision detection function with 2px buffer
 function checkCollision(element1, element2) {
   const rect1 = element1.getBoundingClientRect();
   const rect2 = element2.getBoundingClientRect();
@@ -50,7 +49,8 @@ function updateBird() {
   bird.style.top = `${birdTop}px`;
 
   // Ground collision with buffer
-  if (birdTop >= 542) { // Adjusted from 540 to 542 for 2px buffer
+  if (birdTop >= 542) {
+    console.log("Ground collision detected!");
     endGame();
   }
 }
@@ -77,7 +77,7 @@ function createPipe() {
   pipesContainer.appendChild(bottomPipe);
 
   let pipeLeft = 400;
-  let scored = false; // To track if we've already scored for this pipe pair
+  let scored = false;
   const pipeMoveInterval = setInterval(() => {
     if (isGameOver) {
       clearInterval(pipeMoveInterval);
@@ -88,13 +88,12 @@ function createPipe() {
     topPipe.style.left = `${pipeLeft}px`;
     bottomPipe.style.left = `${pipeLeft}px`;
 
-    // Collision detection using buffer
     if (checkCollision(bird, topPipe) || checkCollision(bird, bottomPipe)) {
+      console.log("Pipe collision detected!");
       endGame();
     }
 
-    // Score increment when pipe passes bird (with buffer)
-    if (!scored && pipeLeft < 50 - 2) { // 2px buffer for scoring
+    if (!scored && pipeLeft < 50 - 2) {
       score++;
       scored = true;
       scoreDisplay.textContent = `Score: ${score}`;
@@ -112,7 +111,6 @@ function createPipe() {
   pipeIntervals.push(pipeMoveInterval);
 }
 
-// Rest of the code remains the same
 function endGame() {
   if (isGameOver) return;
   isGameOver = true;
