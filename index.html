@@ -4,17 +4,200 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flappy Bird Clone</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #87CEEB;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .game-container {
+      position: relative;
+      width: 400px;
+      height: 600px;
+      overflow: hidden;
+      border: 2px solid #000;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 20px;
+      opacity: 0.8;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      from { transform: translateX(100%); }
+      to { transform: translateX(-100%); }
+    }
+
+    #bird {
+      position: absolute;
+      top: 50%;
+      left: 50px;
+      width: 34px;
+      height: 34px;
+      z-index: 2;
+      transition: transform 0.1s;
+    }
+
+    .pipe {
+      position: absolute;
+      width: 60px;
+      background: #4CAF50;
+      border: 2px solid #2E8B57;
+      box-sizing: border-box;
+      right: -60px;
+    }
+
+    #ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 20px;
+      background: #8B4513;
+      z-index: 3;
+    }
+
+    #score, #highscore {
+      position: absolute;
+      top: 10px;
+      font-size: 20px;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      z-index: 4;
+    }
+
+    #score { left: 10px; }
+    #highscore { right: 10px; }
+  </style>
 </head>
 <body>
-  <div class="game-container">
-    <div id="clouds"></div>
+  <div class="game-container" id="gameContainer">
     <img id="bird" src="https://img.poki-cdn.com/cdn-cgi/image/quality=78,width=1200,height=1200,fit=cover,f=png/5e0df231478aa0a331a4718d09dd91a2.png">
     <div id="pipes"></div>
     <div id="ground"></div>
     <div id="score">Score: 0</div>
     <div id="highscore">High Score: 0</div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    const bird = document.getElementById("bird");
+    const gameContainer = document.getElementById("gameContainer");
+    const pipesContainer = document.getElementById("pipes");
+    let birdY = 300;
+    let velocity = 0;
+    let score = 0;
+    let isGameOver = false;
+
+    // Add clouds
+    function createCloud() {
+      const cloud = document.createElement("div");
+      cloud.className = "cloud";
+      cloud.style.top = `${Math.random() * 80}%`;
+      cloud.style.width = `${60 + Math.random() * 40}px`;
+      cloud.style.height = `${20 + Math.random() * 20}px`;
+      cloud.style.animationDuration = `${15 + Math.random() * 15}s`;
+      gameContainer.prepend(cloud);
+    }
+    setInterval(createCloud, 5000);
+
+    // Bird physics
+    function updateBird() {
+      if (isGameOver) return;
+      
+      velocity += 0.5;
+      birdY = Math.max(0, Math.min(birdY + velocity, 566)); // Keep bird within bounds
+      bird.style.top = `${birdY}px`;
+    }
+
+    // Pipe system
+    function createPipe() {
+      if (isGameOver) return;
+      
+      const gap = 150;
+      const pipeHeight = 50 + Math.random() * 300;
+      
+      const topPipe = document.createElement("div");
+      topPipe.className = "pipe";
+      topPipe.style.height = `${pipeHeight}px`;
+      topPipe.style.top = "0";
+      
+      const bottomPipe = document.createElement("div");
+      bottomPipe.className = "pipe";
+      bottomPipe.style.height = `${600 - pipeHeight - gap}px`;
+      bottomPipe.style.bottom = "0";
+
+      pipesContainer.append(topPipe, bottomPipe);
+
+      let position = 400;
+      let scored = false;
+
+      const moveInterval = setInterval(() => {
+        if (isGameOver) {
+          clearInterval(moveInterval);
+          return;
+        }
+
+        position -= 2;
+        topPipe.style.right = `${-position}px`;
+        bottomPipe.style.right = `${-position}px`;
+
+        // Collision detection
+        const birdRect = bird.getBoundingClientRect();
+        const topPipeRect = topPipe.getBoundingClientRect();
+        const bottomPipeRect = bottomPipe.getBoundingClientRect();
+
+        if (
+          birdRect.right > topPipeRect.left &&
+          birdRect.left < topPipeRect.right &&
+          (birdRect.top < topPipeRect.bottom || birdRect.bottom > bottomPipeRect.top)
+        ) {
+          endGame();
+        }
+
+        // Score counting
+        if (!scored && position < 50) {
+          score++;
+          document.getElementById("score").textContent = `Score: ${score}`;
+          scored = true;
+        }
+
+        // Remove pipes
+        if (position < -60) {
+          topPipe.remove();
+          bottomPipe.remove();
+          clearInterval(moveInterval);
+        }
+      }, 16);
+    }
+
+    // Game controls
+    function jump() {
+      if (!isGameOver) velocity = -10;
+    }
+
+    function endGame() {
+      isGameOver = true;
+      alert(`Game Over! Score: ${score}`);
+      location.reload();
+    }
+
+    // Event listeners
+    document.addEventListener("click", jump);
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") jump();
+    });
+
+    // Game loop
+    setInterval(updateBird, 16);
+    setInterval(createPipe, 1500);
+  </script>
 </body>
 </html>
