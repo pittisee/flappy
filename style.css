@@ -4,7 +4,9 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #70c5ce;
+  background-image: url("background.jpg"); /* Local background image */
+  background-size: cover;
+  background-position: center;
   font-family: Arial, sans-serif;
 }
 
@@ -12,7 +14,7 @@ body {
   position: relative;
   width: 400px;
   height: 600px;
-  background-color: #70c5ce;
+  background-color: rgba(112, 197, 206, 0.8); /* Slightly transparent background */
   overflow: hidden;
   border: 2px solid #000;
 }
@@ -21,8 +23,8 @@ body {
   position: absolute;
   top: 50%;
   left: 50px;
-  width: 40px;
-  height: 40px;
+  width: 34px; /* Reduced by 15% (40px * 0.85) */
+  height: 34px; /* Reduced by 15% (40px * 0.85) */
   image-rendering: pixelated;
   transform: translateY(-50%);
   z-index: 2;
@@ -33,9 +35,18 @@ body {
 .pipe {
   position: absolute;
   width: 60px;
-  background-color: #4CAF50;
-  left: 400px;
-  border: 2px solid red; /* Visible hitbox */
+  background: linear-gradient(
+    45deg,
+    #4CAF50 25%,
+    #45a049 25%,
+    #45a049 50%,
+    #4CAF50 50%,
+    #4CAF50 75%,
+    #45a049 75%,
+    #45a049 100%
+  );
+  background-size: 20px 20px; /* Creates a repeating pattern */
+  border: 2px solid #2E8B57; /* Darker green border for pipe effect */
   box-sizing: border-box;
 }
 
