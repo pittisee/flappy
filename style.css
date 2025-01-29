@@ -4,9 +4,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url("https://example.com/path/to/background.jpg"); /* URL for background image */
-  background-size: cover;
-  background-position: center;
+  background-color: #87CEEB; /* Sky blue background */
   font-family: Arial, sans-serif;
 }
 
@@ -14,22 +12,36 @@ body {
   position: relative;
   width: 400px;
   height: 600px;
-  background-color: rgba(112, 197, 206, 0.8); /* Slightly transparent background */
   overflow: hidden;
   border: 2px solid #000;
+}
+
+#clouds {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url("https://www.transparenttextures.com/patterns/cloudy-weather.png") repeat;
+  animation: clouds 60s linear infinite;
+}
+
+@keyframes clouds {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 1000px 0;
+  }
 }
 
 #bird {
   position: absolute;
   top: 50%;
   left: 50px;
-  width: 34px; /* Reduced by 15% (40px * 0.85) */
-  height: 34px; /* Reduced by 15% (40px * 0.85) */
+  width: 34px;
+  height: 34px;
   image-rendering: pixelated;
   transform: translateY(-50%);
   z-index: 2;
-  border: 2px solid red; /* Visible hitbox */
-  box-sizing: border-box;
 }
 
 .pipe {
@@ -49,16 +61,6 @@ body {
   border: 2px solid #2E8B57;
   box-sizing: border-box;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  animation: pipeAnimation 2s infinite linear;
-}
-
-@keyframes pipeAnimation {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 40px 40px;
-  }
 }
 
 #ground {
