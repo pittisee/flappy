@@ -10,11 +10,13 @@ let gameInterval;
 let pipeInterval;
 let score = 0;
 let highscore = localStorage.getItem("flappyHighscore") || 0;
+let isGameOver = false; // New flag to prevent multiple game overs
+
 highscoreDisplay.textContent = `High Score: ${highscore}`;
 
 // Jump function
 document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
+  if (e.code === "Space" && !isGameOver) {
     e.preventDefault();
     velocity = -10;
   }
@@ -22,10 +24,14 @@ document.addEventListener("keydown", (e) => {
 
 // Mobile tap support
 document.addEventListener("click", () => {
-  velocity = -10;
+  if (!isGameOver) {
+    velocity = -10;
+  }
 });
 
 function updateBird() {
+  if (isGameOver) return; // Don't update if game is over
+
   velocity += gravity;
   birdTop += velocity;
   bird.style.top = `${birdTop}px`;
@@ -37,6 +43,8 @@ function updateBird() {
 }
 
 function createPipe() {
+  if (isGameOver) return; // Don't create pipes if game is over
+
   const pipeGap = 150;
   const minHeight = 50;
   const maxHeight = 350;
@@ -57,6 +65,11 @@ function createPipe() {
 
   let pipeLeft = 400;
   const pipeMoveInterval = setInterval(() => {
+    if (isGameOver) {
+      clearInterval(pipeMoveInterval);
+      return;
+    }
+
     pipeLeft -= 2;
     topPipe.style.left = `${pipeLeft}px`;
     bottomPipe.style.left = `${pipeLeft}px`;
@@ -86,21 +99,25 @@ function createPipe() {
 }
 
 function endGame() {
+  if (isGameOver) return; // Prevent multiple triggers
+  isGameOver = true;
+
   clearInterval(gameInterval);
   clearInterval(pipeInterval);
   document.querySelectorAll(".pipe").forEach(pipe => pipe.remove());
-  
+
   if (score > highscore) {
     highscore = score;
     localStorage.setItem("flappyHighscore", highscore);
     highscoreDisplay.textContent = `High Score: ${highscore}`;
   }
-  
+
   alert(`Game Over! Score: ${score}\nPress OK to restart`);
   resetGame();
 }
 
 function resetGame() {
+  isGameOver = false; // Reset the flag
   birdTop = 300;
   velocity = 0;
   score = 0;
