@@ -73,13 +73,13 @@ function createPipe() {
   topPipe.className = "pipe";
   topPipe.style.height = `${pipeHeight}px`;
   topPipe.style.top = "0";
-  topPipe.style.right = "-60px"; // Start off-screen to the right
+  topPipe.style.left = "400px"; // Start at the right edge
 
   const bottomPipe = document.createElement("div");
   bottomPipe.className = "pipe";
   bottomPipe.style.height = `${600 - pipeHeight - pipeGap}px`;
   bottomPipe.style.bottom = "0";
-  bottomPipe.style.right = "-60px"; // Start off-screen to the right
+  bottomPipe.style.left = "400px"; // Start at the right edge
 
   pipesContainer.appendChild(topPipe);
   pipesContainer.appendChild(bottomPipe);
@@ -94,8 +94,8 @@ function createPipe() {
     }
 
     pipeLeft -= 2;
-    topPipe.style.right = `${-pipeLeft}px`;
-    bottomPipe.style.right = `${-pipeLeft}px`;
+    topPipe.style.left = `${pipeLeft}px`;
+    bottomPipe.style.left = `${pipeLeft}px`;
 
     // Check for collision with bird
     if (checkCollision(bird, topPipe) || checkCollision(bird, bottomPipe)) {
