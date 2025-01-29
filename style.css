@@ -18,18 +18,18 @@ body {
 
 #clouds {
   position: absolute;
-  width: 100%;
+  width: 200%; /* Double width for seamless scrolling */
   height: 100%;
-  background: url("https://www.transparenttextures.com/patterns/cloudy-weather.png") repeat;
+  background: url("https://www.transparenttextures.com/patterns/clouds.png") repeat-x;
   animation: clouds 60s linear infinite;
 }
 
 @keyframes clouds {
   from {
-    background-position: 0 0;
+    transform: translateX(0);
   }
   to {
-    background-position: 1000px 0;
+    transform: translateX(-50%); /* Move clouds to the left */
   }
 }
 
