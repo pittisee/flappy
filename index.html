@@ -53,7 +53,6 @@
             color: white;
             font-size: 1.2em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            transform: translateX(0);
         }
         @media (max-width: 600px) {
             .overlay h1 { font-size: 2em; }
@@ -223,7 +222,9 @@
                 lastPipeSpawnTime = currentTime;
             }
 
-            pipes.forEach((pipe, index) => {
+            // Update pipes in reverse to safely remove elements
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                const pipe = pipes[i];
                 pipe.x -= PIPE_SPEED * deltaTime;
                 
                 if (!pipe.scored && bird.x > pipe.x + PIPE_WIDTH) {
@@ -249,9 +250,9 @@
 
                 // Remove off-screen pipes
                 if (pipe.x + PIPE_WIDTH < 0) {
-                    pipes.splice(index, 1);
+                    pipes.splice(i, 1);
                 }
-            });
+            }
 
             // Clouds
             clouds.forEach(cloud => cloud.update(deltaTime));
