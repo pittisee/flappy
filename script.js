@@ -15,7 +15,20 @@ let isGameOver = false;
 
 highscoreDisplay.textContent = `High Score: ${highscore}`;
 
-// Jump function
+// Collision detection function with 2px buffer
+function checkCollision(element1, element2) {
+  const rect1 = element1.getBoundingClientRect();
+  const rect2 = element2.getBoundingClientRect();
+
+  // Adjust for 2px border buffer
+  return !(
+    rect1.right - 2 < rect2.left + 2 ||
+    rect1.left + 2 > rect2.right - 2 ||
+    rect1.bottom - 2 < rect2.top + 2 ||
+    rect1.top + 2 > rect2.bottom - 2
+  );
+}
+
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space" && !isGameOver) {
     e.preventDefault();
@@ -23,7 +36,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Mobile tap support
 document.addEventListener("click", () => {
   if (!isGameOver) {
     velocity = -10;
@@ -37,8 +49,8 @@ function updateBird() {
   birdTop += velocity;
   bird.style.top = `${birdTop}px`;
 
-  // Ground collision
-  if (birdTop > 540) {
+  // Ground collision with buffer
+  if (birdTop >= 542) { // Adjusted from 540 to 542 for 2px buffer
     endGame();
   }
 }
@@ -65,6 +77,7 @@ function createPipe() {
   pipesContainer.appendChild(bottomPipe);
 
   let pipeLeft = 400;
+  let scored = false; // To track if we've already scored for this pipe pair
   const pipeMoveInterval = setInterval(() => {
     if (isGameOver) {
       clearInterval(pipeMoveInterval);
@@ -75,26 +88,18 @@ function createPipe() {
     topPipe.style.left = `${pipeLeft}px`;
     bottomPipe.style.left = `${pipeLeft}px`;
 
-    // Collision detection
-    const birdRect = bird.getBoundingClientRect();
-    const topPipeRect = topPipe.getBoundingClientRect();
-    const bottomPipeRect = bottomPipe.getBoundingClientRect();
-
-    if (
-      birdRect.right > topPipeRect.left &&
-      birdRect.left < topPipeRect.right &&
-      (birdRect.bottom > topPipeRect.bottom || birdRect.top < bottomPipeRect.top)
-    ) {
+    // Collision detection using buffer
+    if (checkCollision(bird, topPipe) || checkCollision(bird, bottomPipe)) {
       endGame();
     }
 
-    // Score increment
-    if (pipeLeft === 50) {
+    // Score increment when pipe passes bird (with buffer)
+    if (!scored && pipeLeft < 50 - 2) { // 2px buffer for scoring
       score++;
+      scored = true;
       scoreDisplay.textContent = `Score: ${score}`;
     }
 
-    // Remove pipes when off-screen
     if (pipeLeft < -60) {
       topPipe.remove();
       bottomPipe.remove();
@@ -107,27 +112,24 @@ function createPipe() {
   pipeIntervals.push(pipeMoveInterval);
 }
 
+// Rest of the code remains the same
 function endGame() {
   if (isGameOver) return;
   isGameOver = true;
 
-  // Clear all intervals
   clearInterval(gameInterval);
   clearInterval(pipeInterval);
   pipeIntervals.forEach(interval => clearInterval(interval));
   pipeIntervals = [];
 
-  // Remove all pipes
   document.querySelectorAll(".pipe").forEach(pipe => pipe.remove());
 
-  // Update highscore
   if (score > highscore) {
     highscore = score;
     localStorage.setItem("flappyHighscore", highscore);
     highscoreDisplay.textContent = `High Score: ${highscore}`;
   }
 
-  // Reset game after alert
   alert(`Game Over! Score: ${score}\nPress OK to restart`);
   resetGame();
 }
@@ -143,7 +145,6 @@ function resetGame() {
 }
 
 function startGame() {
-  // Clear existing intervals (if any)
   clearInterval(gameInterval);
   clearInterval(pipeInterval);
   gameInterval = setInterval(updateBird, 20);
