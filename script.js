@@ -8,7 +8,7 @@ let gravity = 0.5;
 let velocity = 0;
 let gameInterval;
 let pipeInterval;
-let pipeIntervals = []; // Track all pipe movement intervals
+let pipeIntervals = [];
 let score = 0;
 let highscore = localStorage.getItem("flappyHighscore") || 0;
 let isGameOver = false;
@@ -38,7 +38,7 @@ function updateBird() {
   bird.style.top = `${birdTop}px`;
 
   // Ground collision
-  if (birdTop > 540) { // Adjusted to match ground height
+  if (birdTop > 540) {
     endGame();
   }
 }
@@ -76,10 +76,14 @@ function createPipe() {
     bottomPipe.style.left = `${pipeLeft}px`;
 
     // Collision detection
+    const birdRect = bird.getBoundingClientRect();
+    const topPipeRect = topPipe.getBoundingClientRect();
+    const bottomPipeRect = bottomPipe.getBoundingClientRect();
+
     if (
-      pipeLeft < 90 && 
-      pipeLeft > 50 &&
-      (birdTop < pipeHeight || birdTop > pipeHeight + pipeGap - 40)
+      birdRect.right > topPipeRect.left &&
+      birdRect.left < topPipeRect.right &&
+      (birdRect.bottom > topPipeRect.bottom || birdRect.top < bottomPipeRect.top)
     ) {
       endGame();
     }
