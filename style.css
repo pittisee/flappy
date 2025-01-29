@@ -26,6 +26,8 @@ body {
   image-rendering: pixelated;
   transform: translateY(-50%);
   z-index: 2;
+  border: 2px solid red; /* Visible hitbox */
+  box-sizing: border-box;
 }
 
 .pipe {
@@ -33,6 +35,8 @@ body {
   width: 60px;
   background-color: #4CAF50;
   left: 400px;
+  border: 2px solid red; /* Visible hitbox */
+  box-sizing: border-box;
 }
 
 #ground {
