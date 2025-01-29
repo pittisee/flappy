@@ -84,7 +84,6 @@
             const gameOverScreen = document.getElementById('gameOver');
             const finalScore = document.getElementById('finalScore');
 
-            // Responsive setup
             function resizeCanvas() {
                 canvas.width = Math.min(window.innerWidth, 480);
                 canvas.height = Math.min(window.innerHeight, 800);
@@ -92,13 +91,12 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            // Game state
             let gameState = {
                 bird: {
                     x: 100,
                     y: 300,
                     velocity: 0,
-                    gravity: 0.5,
+                    gravity: 0.425, // Reduced from 0.5
                     jump: -8,
                     size: 20
                 },
@@ -111,7 +109,6 @@
                 touchStartY: null
             };
 
-            // Cloud class
             class Cloud {
                 constructor() {
                     this.x = canvas.width;
@@ -134,7 +131,6 @@
                 }
             }
 
-            // Pipe class
             class Pipe {
                 constructor() {
                     this.x = canvas.width;
@@ -149,14 +145,11 @@
 
                 draw() {
                     ctx.fillStyle = '#4CAF50';
-                    // Top pipe
                     ctx.fillRect(this.x, 0, this.width, this.gapY);
-                    // Bottom pipe
                     ctx.fillRect(this.x, this.gapY + gameState.pipeGap, this.width, canvas.height);
                 }
             }
 
-            // Input handling
             function handleInput(e) {
                 if (!gameState.gameActive) return;
                 
@@ -171,12 +164,9 @@
             document.addEventListener('keydown', handleInput);
             canvas.addEventListener('touchstart', handleInput, { passive: false });
 
-            // Collision detection
             function checkCollision() {
-                // Floor collision
                 if (gameState.bird.y + gameState.bird.size > canvas.height) return true;
 
-                // Pipe collision
                 return gameState.pipes.some(pipe => {
                     const inX = gameState.bird.x + gameState.bird.size > pipe.x && 
                               gameState.bird.x - gameState.bird.size < pipe.x + pipe.width;
@@ -186,34 +176,27 @@
                 });
             }
 
-            // Game loop
             function update() {
                 if (!gameState.gameActive) return;
 
-                // Bird physics
                 gameState.bird.velocity += gameState.bird.gravity;
                 gameState.bird.y += gameState.bird.velocity;
 
-                // Spawn pipes
                 if (performance.now() - gameState.lastPipeSpawn > 1500) {
                     gameState.pipes.push(new Pipe());
                     gameState.lastPipeSpawn = performance.now();
                 }
 
-                // Update objects
                 gameState.pipes.forEach(pipe => pipe.update());
                 gameState.clouds.forEach(cloud => cloud.update());
 
-                // Spawn clouds
                 if (Math.random() < 0.01) {
                     gameState.clouds.push(new Cloud());
                 }
 
-                // Cleanup off-screen objects
                 gameState.pipes = gameState.pipes.filter(pipe => pipe.x + pipe.width > 0);
                 gameState.clouds = gameState.clouds.filter(cloud => cloud.x + cloud.size > 0);
 
-                // Score counting
                 gameState.pipes.forEach(pipe => {
                     if (!pipe.scored && pipe.x + pipe.width < gameState.bird.x) {
                         pipe.scored = true;
@@ -222,7 +205,6 @@
                     }
                 });
 
-                // Collision check
                 if (checkCollision()) {
                     gameState.gameActive = false;
                     finalScore.textContent = gameState.score;
@@ -233,31 +215,25 @@
                 draw();
             }
 
-            // Drawing function
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw clouds
                 gameState.clouds.forEach(cloud => cloud.draw());
-
-                // Draw pipes
                 gameState.pipes.forEach(pipe => pipe.draw());
 
-                // Draw bird
                 ctx.fillStyle = '#FFD700';
                 ctx.beginPath();
                 ctx.arc(gameState.bird.x, gameState.bird.y, gameState.bird.size, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // Restart game
             window.restartGame = function() {
                 gameState = {
                     bird: {
                         x: 100,
                         y: 300,
                         velocity: 0,
-                        gravity: 0.5,
+                        gravity: 0.425, // Reduced from 0.5
                         jump: -8,
                         size: 20
                     },
@@ -274,7 +250,6 @@
                 update();
             }
 
-            // Start game
             update();
         })();
     </script>
