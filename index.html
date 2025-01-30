@@ -126,14 +126,14 @@
                     y: 300,
                     velocity: 0,
                     gravity: 0.425,
-                    jump: -8.5, // Slightly stronger jump to balance gravity
+                    jump: -8.5,
                     size: 22,
                     rotation: 0
                 },
                 pipes: [],
                 clouds: [],
                 score: 0,
-                lastPipeSpawn: 0,
+                lastPipeSpawn: performance.now() - 1600, // Immediate first pipe
                 pipeGap: 200,
                 gameActive: true,
                 lastFrameTime: performance.now()
@@ -144,19 +144,18 @@
                 constructor() {
                     this.x = canvas.width + 200;
                     this.y = Math.random() * (canvas.height * 0.6);
-                    this.speed = Math.random() * 0.5 + 0.4; // Faster movement
-                    this.size = Math.random() * 80 + 70; // Larger variety
-                    this.alpha = Math.random() * 0.4 + 0.4; // Variable opacity
+                    this.speed = Math.random() * 0.5 + 0.4;
+                    this.size = Math.random() * 80 + 70;
+                    this.alpha = Math.random() * 0.4 + 0.4;
                 }
 
                 update() {
-                    this.x -= this.speed * (60 / (performance.now() - gameState.lastFrameTime)); // Frame-rate independent
+                    this.x -= this.speed * (60 / (performance.now() - gameState.lastFrameTime));
                 }
 
                 draw() {
                     ctx.fillStyle = `rgba(255,255,255,${this.alpha})`;
                     ctx.beginPath();
-                    // Smoother cloud shape
                     ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
                     ctx.arc(this.x + this.size * 0.35, this.y + this.size * 0.1, this.size * 0.5, 0, Math.PI * 2);
                     ctx.arc(this.x - this.size * 0.25, this.y - this.size * 0.1, this.size * 0.45, 0, Math.PI * 2);
@@ -165,7 +164,7 @@
                 }
             }
 
-            // Pipe class with optimized spacing
+            // Pipe class with corrected positioning
             class Pipe {
                 constructor() {
                     this.x = canvas.width;
@@ -175,12 +174,11 @@
                 }
 
                 update() {
-                    this.x -= 2.2; // Slightly faster pipe movement
+                    this.x -= 2.5; // Adjusted speed for better visibility
                 }
 
                 draw() {
                     ctx.fillStyle = '#4CAF50';
-                    // Gradient pipes
                     const gradientTop = ctx.createLinearGradient(this.x, 0, this.x + this.width, 0);
                     gradientTop.addColorStop(0, '#388E3C');
                     gradientTop.addColorStop(1, '#4CAF50');
@@ -189,22 +187,20 @@
                     gradientBottom.addColorStop(0, '#4CAF50');
                     gradientBottom.addColorStop(1, '#388E3C');
 
-                    // Top pipe
                     ctx.fillStyle = gradientTop;
                     ctx.fillRect(this.x, 0, this.width, this.gapY);
-                    // Bottom pipe
                     ctx.fillStyle = gradientBottom;
                     ctx.fillRect(this.x, this.gapY + gameState.pipeGap, this.width, canvas.height);
                 }
             }
 
-            // Input handling with cooldown
+            // Input handling
             let lastJumpTime = 0;
             function handleInput(e) {
                 if (!gameState.gameActive) return;
                 
                 const now = performance.now();
-                if (now - lastJumpTime < 100) return; // Jump cooldown
+                if (now - lastJumpTime < 100) return;
                 lastJumpTime = now;
 
                 if (e.type === 'touchstart') {
@@ -218,12 +214,10 @@
             document.addEventListener('keydown', handleInput);
             canvas.addEventListener('touchstart', handleInput, { passive: false });
 
-            // Collision detection with hitbox tightening
+            // Collision detection
             function checkCollision() {
-                // Floor collision with margin
                 if (gameState.bird.y + gameState.bird.size * 0.8 > canvas.height) return true;
 
-                // Optimized pipe collision
                 return gameState.pipes.some(pipe => {
                     const birdRight = gameState.bird.x + gameState.bird.size * 0.7;
                     const birdLeft = gameState.bird.x - gameState.bird.size * 0.7;
@@ -235,32 +229,32 @@
                 });
             }
 
-            // Game loop with delta timing
+            // Game loop
             function update(currentTime) {
                 if (!gameState.gameActive) return;
 
                 const deltaTime = currentTime - gameState.lastFrameTime;
                 gameState.lastFrameTime = currentTime;
 
-                // Bird physics with rotation
+                // Bird physics
                 gameState.bird.velocity += gameState.bird.gravity * (deltaTime / 16.67);
                 gameState.bird.y += gameState.bird.velocity * (deltaTime / 16.67);
                 gameState.bird.rotation = Math.min(gameState.bird.velocity * 5, 45);
 
-                // Pipe spawning with interval adjustment
-                if (currentTime - gameState.lastPipeSpawn > 1600) {
+                // Pipe spawning
+                if (currentTime - gameState.lastPipeSpawn > 1500) {
                     gameState.pipes.push(new Pipe());
                     gameState.lastPipeSpawn = currentTime;
                 }
 
                 // Cloud management
                 gameState.clouds.forEach(cloud => cloud.update());
-                if (Math.random() < 0.004) { // Reduced cloud spawn rate
+                if (Math.random() < 0.003) {
                     gameState.clouds.push(new Cloud());
                 }
 
-                // Cleanup off-screen objects
-                gameState.pipes = gameState.pipes.filter(pipe => pipe.x + pipe.width > -50);
+                // Cleanup
+                gameState.pipes = gameState.pipes.filter(pipe => pipe.x + pipe.width > -100);
                 gameState.clouds = gameState.clouds.filter(cloud => cloud.x + cloud.size * 2 > 0);
 
                 // Score handling
@@ -289,17 +283,13 @@
                 draw();
             }
 
-            // Optimized drawing function
+            // Drawing function
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw clouds first
                 gameState.clouds.sort((a, b) => a.y - b.y).forEach(cloud => cloud.draw());
-
-                // Draw pipes
                 gameState.pipes.forEach(pipe => pipe.draw());
 
-                // Draw bird with rotation
                 ctx.save();
                 ctx.translate(gameState.bird.x, gameState.bird.y);
                 ctx.rotate(gameState.bird.rotation * Math.PI / 180);
@@ -310,7 +300,7 @@
                 ctx.restore();
             }
 
-            // Restart game with reset
+            // Restart game
             window.restartGame = function() {
                 gameState = {
                     bird: {
@@ -325,7 +315,7 @@
                     pipes: [],
                     clouds: [],
                     score: 0,
-                    lastPipeSpawn: performance.now(),
+                    lastPipeSpawn: performance.now() - 1500, // Immediate pipe spawn
                     pipeGap: 200,
                     gameActive: true,
                     lastFrameTime: performance.now()
@@ -335,7 +325,6 @@
                 requestAnimationFrame(update);
             }
 
-            // Initial game start
             requestAnimationFrame(update);
         })();
     </script>
