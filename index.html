@@ -53,10 +53,10 @@
         canvas.height = Math.min(screenHeight, 600); // Max height of 600px
 
         // Game variables
-        let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: 0.4, lift: -8, velocity: 0 };
+        let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: 0.4, lift: -8 * 0.7, velocity: 0 }; // Reduced lift by 30%
         let pipes = [];
         let pipeWidth = bird.width * 2; // Pipe width is twice the bird's width
-        let gap = bird.height * 3; // Gap is three times the bird's height
+        let gap = bird.height * 9; // Gap is now three times larger (300% increase)
         let score = 0;
         let highScore = localStorage.getItem('highScore') || 0;
         let gameOver = false;
@@ -98,7 +98,7 @@
         function initPipes() {
             pipes = []; // Clear existing pipes
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * (pipeWidth * 3); // Spacing between pipes
+                let x = canvas.width + i * (pipeWidth * 9); // Increased spacing between pipes (300% increase)
                 pipes.push(new Pipe(x));
             }
         }
