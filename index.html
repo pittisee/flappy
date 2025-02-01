@@ -155,9 +155,7 @@ function gameLoop() {
   updatePipes();
   checkCollision();
 
-  if (!gameOver) {
-    requestAnimationFrame(gameLoop);
-  }
+  requestAnimationFrame(gameLoop);
 }
 
 function resetGame() {
@@ -178,7 +176,9 @@ document.addEventListener('click', () => {
   }
 });
 
-spawnPipes();
+// Spawn pipes at regular intervals
+setInterval(spawnPipes, 1500);
+
 gameLoop();
 </script>
 </body>
