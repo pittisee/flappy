@@ -86,7 +86,8 @@
             update() {
                 this.x -= 2; // Move pipe left
                 if (this.x + pipeWidth < 0) {
-                    this.x = canvas.width;
+                    // Respawn pipe at a fixed distance from the last pipe
+                    this.x = pipes[pipes.length - 1].x + pipeWidth * 27; // Enforce consistent spacing <button class="citation-flag" data-index="6">
                     this.top = Math.random() * (canvas.height - gap - 50) + 20;
                     this.bottom = canvas.height - (this.top + gap);
                     score++;
@@ -98,7 +99,7 @@
         function initPipes() {
             pipes = []; // Clear existing pipes
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * (pipeWidth * 27); // Increased spacing between pipes (3x current value)
+                let x = canvas.width + i * (pipeWidth * 27); // Fixed spacing between pipes <button class="citation-flag" data-index="6">
                 pipes.push(new Pipe(x));
             }
         }
