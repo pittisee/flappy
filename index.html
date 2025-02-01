@@ -27,11 +27,21 @@
     color: white;
     display: none;
   }
+  .start-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    color: white;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 <div class="game-over" id="gameOver">Game Over!</div>
+<div class="start-screen" id="startScreen">Tap to Start</div>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -58,6 +68,7 @@ let pipeSpeed = 2;
 let score = 0;
 let highScore = 0;
 let gameOver = false;
+let gameStarted = false;
 
 function drawBird() {
   ctx.fillStyle = 'yellow';
@@ -146,6 +157,8 @@ function drawScore() {
 }
 
 function gameLoop() {
+  if (!gameStarted) return;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBird();
   drawPipes();
@@ -164,22 +177,23 @@ function resetGame() {
   pipes = [];
   score = 0;
   gameOver = false;
+  gameStarted = false;
   document.getElementById('gameOver').style.display = 'none';
-  gameLoop();
+  document.getElementById('startScreen').style.display = 'block';
 }
 
 document.addEventListener('click', () => {
   if (gameOver) {
     resetGame();
+  } else if (!gameStarted) {
+    gameStarted = true;
+    document.getElementById('startScreen').style.display = 'none';
+    gameLoop();
+    setInterval(spawnPipes, 1500);
   } else {
     bird.velocity = bird.lift;
   }
 });
-
-// Spawn pipes at regular intervals
-setInterval(spawnPipes, 1500);
-
-gameLoop();
 </script>
 </body>
 </html>
