@@ -98,7 +98,7 @@
         function initPipes() {
             pipes = []; // Clear existing pipes
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * (pipeWidth * 9); // Increased spacing between pipes (300% increase)
+                let x = canvas.width + i * (pipeWidth * 27); // Increased spacing between pipes (3x current value)
                 pipes.push(new Pipe(x));
             }
         }
