@@ -149,13 +149,25 @@
 
         // Restart game
         function restartGame() {
+            // Reset bird position and velocity
             bird.y = canvas.height / 2;
             bird.velocity = 0;
-            pipes = [];
+
+            // Reset score
             score = 0;
-            gameOver = false;
+
+            // Clear pipes and reinitialize
+            pipes = [];
+            initPipes();
+
+            // Hide game over screen
             document.getElementById('gameOverScreen').style.display = 'none';
-            initPipes(); // Reinitialize pipes
+
+            // Reset game state
+            gameOver = false;
+
+            // Restart the game loop
+            gameLoop();
         }
 
         // Game loop
