@@ -91,7 +91,7 @@
                 this.bottom = canvas.height - (this.top + GAP);
 
                 // Validate the gap size
-                if (this.bottom - this.top < GAP) {
+                if (this.bottom - this.top !== GAP) {
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
                 }
@@ -103,13 +103,6 @@
                 ctx.fillStyle = 'green';
                 ctx.fillRect(this.x, 0, PIPE_WIDTH, this.top);
                 ctx.fillRect(this.x, canvas.height - this.bottom, PIPE_WIDTH, this.bottom);
-
-                // Debugging: Draw the "tail" as a line
-                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-                ctx.beginPath();
-                ctx.moveTo(this.x + PIPE_WIDTH, 0);
-                ctx.lineTo(this.x + PIPE_WIDTH + this.tailLength(), canvas.height);
-                ctx.stroke();
             }
 
             update() {
@@ -125,7 +118,7 @@
                     this.bottom = canvas.height - (this.top + GAP);
 
                     // Validate the gap size
-                    if (this.bottom - this.top < GAP) {
+                    if (this.bottom - this.top !== GAP) {
                         this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                         this.bottom = canvas.height - (this.top + GAP);
                     }
