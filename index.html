@@ -101,7 +101,7 @@
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
-                    this.x += calculatePipeSpacing(); // Dynamically calculate spacing
+                    this.x = pipes[pipes.length - 1].x + calculatePipeSpacing(); // Use dynamic spacing
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
                     this.hasScored = false; // Reset scoring flag
@@ -124,9 +124,10 @@
         // Initialize pipes
         function initPipes() {
             pipes = [];
+            let startX = canvas.width; // Start the first pipe off-screen
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * calculatePipeSpacing(); // Use dynamic spacing
-                pipes.push(new Pipe(x));
+                pipes.push(new Pipe(startX));
+                startX += calculatePipeSpacing(); // Use dynamic spacing
             }
         }
 
