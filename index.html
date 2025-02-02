@@ -102,7 +102,7 @@
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
                     const lastPipe = pipes[pipes.length - 1];
-                    this.x = Math.max(lastPipe.x + calculatePipeSpacing(), canvas.width); // Ensure proper spacing
+                    this.x = lastPipe.x + calculatePipeSpacing(); // Use dynamic spacing
 
                     // Ensure valid top and bottom heights
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
@@ -122,7 +122,7 @@
 
         // Dynamically calculate pipe spacing based on speed
         function calculatePipeSpacing() {
-            const MIN_SPACING = PIPE_WIDTH * 6; // Minimum spacing between pipes
+            const MIN_SPACING = PIPE_WIDTH * 8; // Increase minimum spacing
             return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing increases with speed
         }
 
@@ -196,6 +196,10 @@
             initPipes(); // Reinitialize pipes
             document.getElementById('gameOverScreen').style.display = 'none'; // Hide game-over screen
             gameOver = false; // Reset game-over state
+
+            // Force a full redraw of the canvas to clear any lingering artifacts
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             gameLoop(); // Restart the game loop
         }
 
@@ -212,15 +216,14 @@
 
         // Render game elements
         function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the entire canvas
+            // Clear the canvas and fill it with the background color
+            ctx.fillStyle = '#70c5ce'; // Match the background color in CSS
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             drawBird();
 
             // Filter out invalid pipes
             pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH >= 0);
-
-            // Debugging: Log pipe positions
-            console.log('Pipes:', pipes.map(pipe => ({ x: pipe.x, top: pipe.top, bottom: pipe.bottom })));
 
             pipes.forEach(pipe => pipe.draw());
 
