@@ -233,6 +233,17 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Handle tab visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                // Pause the game when the tab is hidden
+                isPaused = true;
+            } else {
+                // Reset the game when the tab becomes visible again
+                restartGame();
+            }
+        });
+
         // Start the game
         initPipes();
         gameLoop();
