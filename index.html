@@ -59,7 +59,7 @@
         const GAP = 180; // Fixed gap size
         const INITIAL_PIPE_SPEED = 2;
         const BASE_PIPE_SPACING = PIPE_WIDTH * 10; // Base spacing of 10 pipe widths
-        const MIN_SPACING = PIPE_WIDTH * 10; // Minimum spacing between pipes <button class="citation-flag" data-index="1">
+        const MIN_SPACING = PIPE_WIDTH * 10; // Minimum spacing between pipes (tail length) <button class="citation-flag" data-index="1">
         const NUM_PIPES = 6; // Fixed number of pipes in the pool
 
         // Game variables
@@ -111,7 +111,7 @@
                 // Loop the pipe back to the right edge when it exits the left edge
                 if (this.x + PIPE_WIDTH < 0) {
                     const lastPipe = pipes[pipes.length - 1];
-                    this.x = lastPipe.x + calculatePipeSpacing(); // Enforce minimum spacing <button class="citation-flag" data-index="1">
+                    this.x = lastPipe.x + lastPipe.tailLength(); // Respawn at the end of the "tail" <button class="citation-flag" data-index="1">
 
                     // Ensure valid top and bottom heights
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
@@ -132,6 +132,11 @@
                     this.hasScored = true;
                     updateDifficulty();
                 }
+            }
+
+            // Calculate the "tail" length of the pipe
+            tailLength() {
+                return calculatePipeSpacing(); // Use dynamic spacing as the tail length <button class="citation-flag" data-index="1">
             }
         }
 
