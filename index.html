@@ -70,6 +70,7 @@
 
         // Delta time variables
         let lastTime = 0;
+        const FRAME_RATE = 1000 / 60; // Target 60 FPS (16.67ms per frame)
 
         // Event listeners for flapping
         document.addEventListener('click', flap);
@@ -98,7 +99,7 @@
             }
 
             update(deltaTime) {
-                this.x -= pipeSpeed * (deltaTime / 16); // Adjust speed based on frame time
+                this.x -= pipeSpeed;
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
@@ -129,8 +130,8 @@
         }
 
         // Update bird position
-        function updateBird(deltaTime) {
-            bird.velocity += bird.gravity * (deltaTime / 16); // Adjust gravity based on frame time
+        function updateBird() {
+            bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
             // Collision detection with edges
@@ -207,21 +208,25 @@
         }
 
         // Update game state
-        function update(deltaTime) {
-            updateBird(deltaTime);
-            pipes.forEach(pipe => pipe.update(deltaTime));
+        function update() {
+            updateBird();
+            pipes.forEach(pipe => pipe.update());
         }
 
         // Game loop
         function gameLoop(timestamp) {
             if (!lastTime) lastTime = timestamp; // Initialize lastTime on the first frame
             const deltaTime = timestamp - lastTime; // Calculate time elapsed since the last frame
-            lastTime = timestamp;
 
-            if (gameOver || isPaused) return;
+            // Only update the game state if enough time has passed for a new frame
+            if (deltaTime >= FRAME_RATE) {
+                lastTime = timestamp - (deltaTime % FRAME_RATE); // Adjust for any excess time
 
-            update(deltaTime);
-            render();
+                if (gameOver || isPaused) return;
+
+                update();
+                render();
+            }
 
             requestAnimationFrame(gameLoop);
         }
