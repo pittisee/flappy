@@ -58,7 +58,7 @@
         const PIPE_WIDTH = 40; // Fixed pipe width
         const GAP = 180; // Fixed gap size
         const INITIAL_PIPE_SPEED = 2;
-        const PIPE_SPACING = PIPE_WIDTH * 6; // Minimum spacing of 6 pipe widths
+        const BASE_PIPE_SPACING = PIPE_WIDTH * 6; // Base spacing of 6 pipe widths
 
         // Game variables
         let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: GRAVITY, lift: LIFT, velocity: 0 };
@@ -101,7 +101,7 @@
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
-                    this.x += pipes.length * PIPE_SPACING; // Respawn off-screen
+                    this.x += calculatePipeSpacing(); // Dynamically calculate spacing
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
                     this.hasScored = false; // Reset scoring flag
@@ -116,11 +116,16 @@
             }
         }
 
+        // Dynamically calculate pipe spacing based on speed
+        function calculatePipeSpacing() {
+            return BASE_PIPE_SPACING + pipeSpeed * 30; // Increase spacing as speed increases
+        }
+
         // Initialize pipes
         function initPipes() {
             pipes = [];
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * PIPE_SPACING; // Fixed spacing between pipes
+                let x = canvas.width + i * calculatePipeSpacing(); // Use dynamic spacing
                 pipes.push(new Pipe(x));
             }
         }
