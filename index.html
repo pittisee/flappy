@@ -52,54 +52,65 @@
         canvas.width = Math.min(screenWidth, 400); // Max width of 400px
         canvas.height = Math.min(screenHeight, 600); // Max height of 600px
 
+        // Constants
+        const GRAVITY = 0.4;
+        const LIFT = -8 * 0.7;
+        const PIPE_WIDTH = 40; // Fixed pipe width
+        const GAP = 180; // Fixed gap size
+        const INITIAL_PIPE_SPEED = 2;
+
         // Game variables
-        let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: 0.4, lift: -8 * 0.7, velocity: 0 }; // Reduced lift by 30%
+        let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: GRAVITY, lift: LIFT, velocity: 0 };
         let pipes = [];
-        let pipeWidth = bird.width * 2; // Pipe width is twice the bird's width
-        let gap = bird.height * 9; // Gap is now three times larger (300% increase)
         let score = 0;
         let highScore = localStorage.getItem('highScore') || 0;
         let gameOver = false;
+        let isPaused = false;
+        let pipeSpeed = INITIAL_PIPE_SPEED;
 
         // Event listeners for flapping
         document.addEventListener('click', flap);
         document.addEventListener('touchstart', flap);
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') flap();
+            if (e.key === 'p') togglePause();
+        });
 
         function flap() {
-            if (!gameOver) bird.velocity = bird.lift;
+            if (!gameOver && !isPaused) bird.velocity = bird.lift;
         }
 
         // Pipe object
         class Pipe {
-            constructor(x) {
-                this.x = x;
-                this.top = Math.random() * (canvas.height - gap - 50) + 20;
-                this.bottom = canvas.height - (this.top + gap);
+            constructor(x, lastPipeX = null) {
+                this.x = lastPipeX !== null ? lastPipeX + PIPE_WIDTH * 4 : x;
+                this.top = Math.random() * (canvas.height - GAP - 50) + 20;
+                this.bottom = canvas.height - (this.top + GAP);
             }
 
             draw() {
                 ctx.fillStyle = 'green';
-                ctx.fillRect(this.x, 0, pipeWidth, this.top);
-                ctx.fillRect(this.x, canvas.height - this.bottom, pipeWidth, this.bottom);
+                ctx.fillRect(this.x, 0, PIPE_WIDTH, this.top);
+                ctx.fillRect(this.x, canvas.height - this.bottom, PIPE_WIDTH, this.bottom);
             }
 
             update() {
-                this.x -= 2; // Move pipe left
-                if (this.x + pipeWidth < 0) {
-                    // Respawn pipe exactly 4 pipe widths from the last pipe
-                    this.x = pipes[pipes.length - 1].x + pipeWidth * 4; // Enforce consistent spacing <button class="citation-flag" data-index="6">
-                    this.top = Math.random() * (canvas.height - gap - 50) + 20;
-                    this.bottom = canvas.height - (this.top + gap);
+                this.x -= pipeSpeed;
+                if (this.x + PIPE_WIDTH < 0) {
+                    this.x = pipes[pipes.length - 1].x + PIPE_WIDTH * 4;
+                    this.top = Math.random() * (canvas.height - GAP - 50) + 20;
+                    this.bottom = canvas.height - (this.top + GAP);
                     score++;
+                    updateDifficulty();
                 }
             }
         }
 
         // Initialize pipes
         function initPipes() {
-            pipes = []; // Clear existing pipes
+            pipes = [];
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * (pipeWidth * 4); // Fixed spacing between pipes <button class="citation-flag" data-index="6">
+                let x = canvas.width + i * (PIPE_WIDTH * 4);
                 pipes.push(new Pipe(x));
             }
         }
@@ -117,21 +128,26 @@
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
-            // Collision detection with top/bottom edges
+            // Collision detection with edges
             if (bird.y + bird.height > canvas.height || bird.y - bird.height < 0) {
                 endGame();
             }
 
             // Collision detection with pipes
             for (let pipe of pipes) {
-                if (
-                    bird.x < pipe.x + pipeWidth &&
-                    bird.x + bird.width > pipe.x &&
-                    (bird.y - bird.height < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
-                ) {
+                if (checkCollision(pipe)) {
                     endGame();
                 }
             }
+        }
+
+        // Helper function for collision detection
+        function checkCollision(pipe) {
+            return (
+                bird.x < pipe.x + PIPE_WIDTH &&
+                bird.x + bird.width > pipe.x &&
+                (bird.y - bird.height < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
+            );
         }
 
         // End game logic
@@ -150,49 +166,52 @@
 
         // Restart game
         function restartGame() {
-            // Reset bird position and velocity
             bird.y = canvas.height / 2;
             bird.velocity = 0;
-
-            // Reset score
             score = 0;
-
-            // Clear pipes and reinitialize
+            pipeSpeed = INITIAL_PIPE_SPEED;
             pipes = [];
             initPipes();
-
-            // Hide game over screen
             document.getElementById('gameOverScreen').style.display = 'none';
-
-            // Reset game state
             gameOver = false;
-
-            // Restart the game loop
             gameLoop();
         }
 
-        // Game loop
-        function gameLoop() {
-            if (gameOver) return;
+        // Toggle pause functionality
+        function togglePause() {
+            isPaused = !isPaused;
+            if (!isPaused) gameLoop(); // Resume the game loop
+        }
 
+        // Update difficulty based on score
+        function updateDifficulty() {
+            pipeSpeed = INITIAL_PIPE_SPEED + Math.floor(score / 10); // Increase speed every 10 points
+        }
+
+        // Render game elements
+        function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw and update pipes
-            for (let pipe of pipes) {
-                pipe.draw();
-                pipe.update();
-            }
-
-            // Draw and update bird
             drawBird();
-            updateBird();
+            pipes.forEach(pipe => pipe.draw());
 
             // Display score
             ctx.fillStyle = 'black';
             ctx.font = '20px Arial';
             ctx.fillText(`Score: ${score}`, 10, 20);
             ctx.fillText(`High Score: ${highScore}`, 10, 40);
+        }
 
+        // Update game state
+        function update() {
+            updateBird();
+            pipes.forEach(pipe => pipe.update());
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (gameOver || isPaused) return;
+            update();
+            render();
             requestAnimationFrame(gameLoop);
         }
 
