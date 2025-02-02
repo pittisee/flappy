@@ -190,6 +190,7 @@
             initPipes();
             document.getElementById('gameOverScreen').style.display = 'none';
             gameOver = false;
+            isPaused = false;
             gameLoop();
         }
 
@@ -239,8 +240,8 @@
                 // Pause the game when the tab is hidden
                 isPaused = true;
             } else {
-                // Reset the game when the tab becomes visible again
-                restartGame();
+                // Show a message prompting the user to restart or resume
+                alert("Welcome back! Please click 'Restart' to continue.");
             }
         });
 
