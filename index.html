@@ -58,7 +58,7 @@
         const PIPE_WIDTH = 40; // Fixed pipe width
         const GAP = 180; // Fixed gap size
         const INITIAL_PIPE_SPEED = 2;
-        const BASE_PIPE_SPACING = PIPE_WIDTH * 6; // Base spacing of 6 pipe widths
+        const BASE_PIPE_SPACING = PIPE_WIDTH * 8; // Base spacing of 8 pipe widths
 
         // Game variables
         let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: GRAVITY, lift: LIFT, velocity: 0 };
@@ -101,13 +101,9 @@
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
-                    const lastPipe = pipes[pipes.length - 1];
-                    this.x = lastPipe.x + calculatePipeSpacing(); // Use dynamic spacing
-
-                    // Ensure valid top and bottom heights
+                    this.x = canvas.width + calculatePipeSpacing(); // Move to the right edge of the screen
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
-
                     this.hasScored = false; // Reset scoring flag
                 }
 
@@ -122,8 +118,7 @@
 
         // Dynamically calculate pipe spacing based on speed
         function calculatePipeSpacing() {
-            const MIN_SPACING = PIPE_WIDTH * 8; // Increase minimum spacing
-            return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing increases with speed
+            return BASE_PIPE_SPACING + pipeSpeed * 40; // Ensure spacing increases with speed
         }
 
         // Initialize pipes
@@ -188,17 +183,18 @@
 
         // Restart game
         function restartGame() {
-            bird.y = canvas.height / 2; // Reset bird position
-            bird.velocity = 0; // Reset bird velocity
-            score = 0; // Reset score
-            pipeSpeed = INITIAL_PIPE_SPEED; // Reset pipe speed
+            // Fully reset game state
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            score = 0;
+            pipeSpeed = INITIAL_PIPE_SPEED;
             pipes = []; // Clear all pipes
             initPipes(); // Reinitialize pipes
-            document.getElementById('gameOverScreen').style.display = 'none'; // Hide game-over screen
-            gameOver = false; // Reset game-over state
+            document.getElementById('gameOverScreen').style.display = 'none';
+            gameOver = false;
 
-            // Force a full redraw of the canvas to clear any lingering artifacts
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Force a full redraw of the canvas
+            render();
 
             gameLoop(); // Restart the game loop
         }
@@ -221,10 +217,6 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             drawBird();
-
-            // Filter out invalid pipes
-            pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH >= 0);
-
             pipes.forEach(pipe => pipe.draw());
 
             // Display score
