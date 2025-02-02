@@ -122,7 +122,8 @@
 
         // Dynamically calculate pipe spacing based on speed
         function calculatePipeSpacing() {
-            return BASE_PIPE_SPACING + pipeSpeed * 40; // Increase spacing further
+            const MIN_SPACING = PIPE_WIDTH * 6; // Minimum spacing between pipes
+            return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing is sufficient
         }
 
         // Initialize pipes
@@ -187,15 +188,15 @@
 
         // Restart game
         function restartGame() {
-            bird.y = canvas.height / 2;
-            bird.velocity = 0;
-            score = 0;
-            pipeSpeed = INITIAL_PIPE_SPEED;
+            bird.y = canvas.height / 2; // Reset bird position
+            bird.velocity = 0; // Reset bird velocity
+            score = 0; // Reset score
+            pipeSpeed = INITIAL_PIPE_SPEED; // Reset pipe speed
             pipes = []; // Clear all pipes
             initPipes(); // Reinitialize pipes
-            document.getElementById('gameOverScreen').style.display = 'none';
-            gameOver = false;
-            gameLoop();
+            document.getElementById('gameOverScreen').style.display = 'none'; // Hide game-over screen
+            gameOver = false; // Reset game-over state
+            gameLoop(); // Restart the game loop
         }
 
         // Toggle pause functionality
@@ -211,10 +212,11 @@
 
         // Render game elements
         function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the entire canvas
+
             drawBird();
 
-            // Filter out invalid pipes (optional, for debugging)
+            // Filter out invalid pipes
             pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH >= 0);
 
             pipes.forEach(pipe => pipe.draw());
@@ -243,7 +245,7 @@
 
         // Game loop
         function gameLoop() {
-            if (gameOver || isPaused) return;
+            if (gameOver || isPaused) return; // Stop the game loop if the game is over or paused
             update();
             render();
             requestAnimationFrame(gameLoop);
