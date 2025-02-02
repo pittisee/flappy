@@ -68,6 +68,9 @@
         let isPaused = false;
         let pipeSpeed = INITIAL_PIPE_SPEED;
 
+        // Delta time variables
+        let lastTime = 0;
+
         // Event listeners for flapping
         document.addEventListener('click', flap);
         document.addEventListener('touchstart', flap);
@@ -94,8 +97,8 @@
                 ctx.fillRect(this.x, canvas.height - this.bottom, PIPE_WIDTH, this.bottom);
             }
 
-            update() {
-                this.x -= pipeSpeed;
+            update(deltaTime) {
+                this.x -= pipeSpeed * (deltaTime / 16); // Adjust speed based on frame time
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
@@ -126,8 +129,8 @@
         }
 
         // Update bird position
-        function updateBird() {
-            bird.velocity += bird.gravity;
+        function updateBird(deltaTime) {
+            bird.velocity += bird.gravity * (deltaTime / 16); // Adjust gravity based on frame time
             bird.y += bird.velocity;
 
             // Collision detection with edges
@@ -204,16 +207,22 @@
         }
 
         // Update game state
-        function update() {
-            updateBird();
-            pipes.forEach(pipe => pipe.update());
+        function update(deltaTime) {
+            updateBird(deltaTime);
+            pipes.forEach(pipe => pipe.update(deltaTime));
         }
 
         // Game loop
-        function gameLoop() {
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp; // Initialize lastTime on the first frame
+            const deltaTime = timestamp - lastTime; // Calculate time elapsed since the last frame
+            lastTime = timestamp;
+
             if (gameOver || isPaused) return;
-            update();
+
+            update(deltaTime);
             render();
+
             requestAnimationFrame(gameLoop);
         }
 
