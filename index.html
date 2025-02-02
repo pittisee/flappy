@@ -59,6 +59,7 @@
         const GAP = 180; // Fixed gap size
         const INITIAL_PIPE_SPEED = 2;
         const BASE_PIPE_SPACING = PIPE_WIDTH * 8; // Base spacing of 8 pipe widths
+        const NUM_PIPES = 5; // Fixed number of pipes in the pool
 
         // Game variables
         let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: GRAVITY, lift: LIFT, velocity: 0 };
@@ -101,13 +102,9 @@
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
-                    const lastPipe = pipes[pipes.length - 1];
-                    this.x = lastPipe.x + calculatePipeSpacing(); // Use dynamic spacing
-
-                    // Ensure valid top and bottom heights
+                    this.x = canvas.width + calculatePipeSpacing(); // Move to the right edge of the screen
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
-
                     this.hasScored = false; // Reset scoring flag
                 }
 
@@ -130,7 +127,7 @@
         function initPipes() {
             pipes = [];
             let startX = canvas.width; // Start the first pipe off-screen
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < NUM_PIPES; i++) {
                 pipes.push(new Pipe(startX));
                 startX += calculatePipeSpacing(); // Use dynamic spacing
             }
@@ -221,9 +218,6 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             drawBird();
-
-            // Filter out invalid pipes
-            pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH >= 0);
 
             pipes.forEach(pipe => pipe.draw());
 
