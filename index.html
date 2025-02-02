@@ -58,6 +58,7 @@
         const PIPE_WIDTH = 40; // Fixed pipe width
         const GAP = 180; // Fixed gap size
         const INITIAL_PIPE_SPEED = 2;
+        const PIPE_SPACING = PIPE_WIDTH * 6; // Minimum spacing of 6 pipe widths
 
         // Game variables
         let bird = { x: 50, y: canvas.height / 2, width: 20, height: 20, gravity: GRAVITY, lift: LIFT, velocity: 0 };
@@ -67,10 +68,6 @@
         let gameOver = false;
         let isPaused = false;
         let pipeSpeed = INITIAL_PIPE_SPEED;
-
-        // Delta time variables
-        let lastTime = 0;
-        const FRAME_RATE = 1000 / 60; // Target 60 FPS (16.67ms per frame)
 
         // Event listeners for flapping
         document.addEventListener('click', flap);
@@ -90,6 +87,7 @@
                 this.x = x;
                 this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                 this.bottom = canvas.height - (this.top + GAP);
+                this.hasScored = false; // Track if this pipe has been scored
             }
 
             draw() {
@@ -98,15 +96,21 @@
                 ctx.fillRect(this.x, canvas.height - this.bottom, PIPE_WIDTH, this.bottom);
             }
 
-            update(deltaTime) {
+            update() {
                 this.x -= pipeSpeed;
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
-                    this.x = canvas.width; // Reset to the right edge of the canvas
+                    this.x = pipes[pipes.length - 1].x + PIPE_SPACING; // Enforce consistent spacing
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
+                    this.hasScored = false; // Reset scoring flag
+                }
+
+                // Increment score when bird passes through the pipe
+                if (!this.hasScored && bird.x > this.x + PIPE_WIDTH) {
                     score++;
+                    this.hasScored = true;
                     updateDifficulty();
                 }
             }
@@ -116,7 +120,7 @@
         function initPipes() {
             pipes = [];
             for (let i = 0; i < 3; i++) {
-                let x = canvas.width + i * (PIPE_WIDTH * 6); // Fixed spacing between pipes
+                let x = canvas.width + i * PIPE_SPACING; // Fixed spacing between pipes
                 pipes.push(new Pipe(x));
             }
         }
@@ -214,19 +218,11 @@
         }
 
         // Game loop
-        function gameLoop(timestamp) {
-            if (!lastTime) lastTime = timestamp; // Initialize lastTime on the first frame
-            const deltaTime = timestamp - lastTime; // Calculate time elapsed since the last frame
+        function gameLoop() {
+            if (gameOver || isPaused) return;
 
-            // Only update the game state if enough time has passed for a new frame
-            if (deltaTime >= FRAME_RATE) {
-                lastTime = timestamp - (deltaTime % FRAME_RATE); // Adjust for any excess time
-
-                if (gameOver || isPaused) return;
-
-                update();
-                render();
-            }
+            update();
+            render();
 
             requestAnimationFrame(gameLoop);
         }
