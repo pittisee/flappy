@@ -89,6 +89,13 @@
                 this.x = x;
                 this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                 this.bottom = canvas.height - (this.top + GAP);
+
+                // Validate the gap size
+                if (this.bottom - this.top < GAP) {
+                    this.top = Math.random() * (canvas.height - GAP - 50) + 20;
+                    this.bottom = canvas.height - (this.top + GAP);
+                }
+
                 this.hasScored = false; // Track if this pipe has been scored
             }
 
@@ -109,6 +116,12 @@
                     // Ensure valid top and bottom heights
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
+
+                    // Validate the gap size
+                    if (this.bottom - this.top < GAP) {
+                        this.top = Math.random() * (canvas.height - GAP - 50) + 20;
+                        this.bottom = canvas.height - (this.top + GAP);
+                    }
 
                     this.hasScored = false; // Reset scoring flag
                 }
@@ -218,10 +231,14 @@
         // Render game elements
         function render() {
             // Clear the canvas and fill it with the background color
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#70c5ce'; // Match the background color in CSS
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             drawBird();
+
+            // Filter out invalid pipes
+            pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH >= 0);
 
             pipes.forEach(pipe => pipe.draw());
 
