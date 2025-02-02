@@ -101,7 +101,7 @@
 
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
-                    this.x = pipes[pipes.length - 1].x + PIPE_SPACING; // Enforce consistent spacing
+                    this.x += pipes.length * PIPE_SPACING; // Respawn off-screen
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
                     this.hasScored = false; // Reset scoring flag
