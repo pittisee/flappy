@@ -100,9 +100,9 @@
             update() {
                 this.x -= pipeSpeed;
 
-                // Respawn pipe when it exits the screen
+                // Loop the pipe back to the right edge when it exits the left edge
                 if (this.x + PIPE_WIDTH < 0) {
-                    this.x = canvas.width + calculatePipeSpacing(); // Move to the right edge of the screen
+                    this.x = canvas.width; // Reset to the right edge
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
                     this.bottom = canvas.height - (this.top + GAP);
                     this.hasScored = false; // Reset scoring flag
@@ -120,7 +120,7 @@
         // Dynamically calculate pipe spacing based on speed
         function calculatePipeSpacing() {
             const MIN_SPACING = PIPE_WIDTH * 8; // Minimum spacing between pipes
-            return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing increases with speed <button class="citation-flag" data-index="8">
+            return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing increases with speed <button class="citation-flag" data-index="1">
         }
 
         // Initialize pipes
