@@ -102,7 +102,7 @@
                 // Respawn pipe when it exits the screen
                 if (this.x + PIPE_WIDTH < 0) {
                     const lastPipe = pipes[pipes.length - 1];
-                    this.x = lastPipe.x + calculatePipeSpacing(); // Use dynamic spacing
+                    this.x = Math.max(lastPipe.x + calculatePipeSpacing(), canvas.width); // Ensure proper spacing
 
                     // Ensure valid top and bottom heights
                     this.top = Math.random() * (canvas.height - GAP - 50) + 20;
@@ -123,7 +123,7 @@
         // Dynamically calculate pipe spacing based on speed
         function calculatePipeSpacing() {
             const MIN_SPACING = PIPE_WIDTH * 6; // Minimum spacing between pipes
-            return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing is sufficient
+            return Math.max(MIN_SPACING, BASE_PIPE_SPACING + pipeSpeed * 40); // Ensure spacing increases with speed
         }
 
         // Initialize pipes
@@ -218,6 +218,9 @@
 
             // Filter out invalid pipes
             pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH >= 0);
+
+            // Debugging: Log pipe positions
+            console.log('Pipes:', pipes.map(pipe => ({ x: pipe.x, top: pipe.top, bottom: pipe.bottom })));
 
             pipes.forEach(pipe => pipe.draw());
 
