@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flappy Clone</title>
   <style>
-    /* Fill the entire viewport */
+    /* Ensure full viewport coverage */
     html, body {
       margin: 0;
       padding: 0;
@@ -15,16 +15,23 @@
       background: #70c5ce;
       overflow: hidden;
     }
-    /* Keep intrinsic game resolution (320x480) and center it */
-    #gameCanvas {
+    /* Container holding the game (intrinsic size 320x480) */
+    #gameContainer {
       position: absolute;
       left: 50%;
       top: 50%;
       width: 320px;
       height: 480px;
+      /* We set the transform origin so scaling happens from the top left */
+      transform-origin: top left;
+    }
+    /* The canvas uses the container’s intrinsic dimensions */
+    #gameCanvas {
+      width: 320px;
+      height: 480px;
       display: block;
     }
-    /* Game over overlay styling */
+    /* Game Over overlay (inside the container) */
     #gameOver {
       position: absolute;
       top: 50%;
@@ -41,17 +48,21 @@
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="320" height="480"></canvas>
-  <div id="gameOver">Game Over<br><small>Tap anywhere to restart</small></div>
+  <!-- Wrap canvas and overlay in a container -->
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="320" height="480"></canvas>
+    <div id="gameOver">Game Over<br><small>Tap anywhere to restart</small></div>
+  </div>
 
   <script>
     // Intrinsic game dimensions
     const GAME_WIDTH = 320;
     const GAME_HEIGHT = 480;
+    const container = document.getElementById('gameContainer');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Game constants (gravity further reduced to 0.35)
+    // Game constants (gravity reduced further to 0.35)
     const GRAVITY = 0.35;
     const JUMP_STRENGTH = 8;
     const PIPE_SPEED = 2.5;
@@ -63,7 +74,7 @@
     let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
     let highScore = 0;
 
-    // Create bird object
+    // Create the bird object
     function createBird() {
       return { x: 50, y: GAME_HEIGHT / 2, radius: 10, vy: 0 };
     }
@@ -74,7 +85,7 @@
       return { x: GAME_WIDTH, gapY: gapY };
     }
 
-    // Initialize game state
+    // Initialize or reset game state
     function initGame() {
       bird = createBird();
       pipes = [];
@@ -87,12 +98,12 @@
     // Restart game after game over
     function restartGame() {
       initGame();
-      canvas.removeEventListener('mousedown', restartGame);
-      canvas.removeEventListener('touchstart', restartGame);
+      container.removeEventListener('mousedown', restartGame);
+      container.removeEventListener('touchstart', restartGame);
       gameLoop();
     }
 
-    // Handle user input (jump)
+    // Handle user input – jump on tap/click
     function jump() {
       if (!gameRunning) return;
       bird.vy = -JUMP_STRENGTH;
@@ -112,29 +123,25 @@
       return (dx * dx + dy * dy) < (circle.radius * circle.radius);
     }
 
-    // Update game state each frame
+    // Update game state
     function update(deltaTime) {
       bird.vy += GRAVITY;
       bird.y += bird.vy;
-      
+
       const now = performance.now();
       if (now - lastPipeTime > PIPE_INTERVAL) {
         pipes.push(createPipe());
         lastPipeTime = now;
       }
-      
       pipes.forEach(pipe => pipe.x -= PIPE_SPEED);
-      
       if (pipes.length && pipes[0].x < -PIPE_WIDTH) {
         pipes.shift();
         score++;
-        if(score > highScore) highScore = score;
+        if (score > highScore) highScore = score;
       }
-      
       if (bird.y + bird.radius > GAME_HEIGHT || bird.y - bird.radius < 0) {
         gameOver();
       }
-      
       for (let p of pipes) {
         if (
           circleRectCollision(bird, p.x, 0, PIPE_WIDTH, p.gapY) ||
@@ -150,32 +157,28 @@
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       ctx.fillStyle = "#70c5ce";
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-      
       ctx.fillStyle = "#228B22";
       pipes.forEach(p => {
         ctx.fillRect(p.x, 0, PIPE_WIDTH, p.gapY);
         ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP);
       });
-      
       ctx.fillStyle = "#FF0";
       ctx.beginPath();
       ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
       ctx.fill();
-      
       ctx.fillStyle = "#fff";
       ctx.font = "16px sans-serif";
       ctx.fillText("Score: " + score, 10, 20);
       ctx.fillText("Highscore: " + highScore, 10, 40);
     }
 
-    // Main game loop using requestAnimationFrame
+    // Main game loop
     let lastTime = performance.now();
     function gameLoop() {
       if (!gameRunning) return;
       const now = performance.now();
       const deltaTime = now - lastTime;
       lastTime = now;
-      
       update(deltaTime);
       render();
       animationFrame = requestAnimationFrame(gameLoop);
@@ -185,22 +188,20 @@
     function gameOver() {
       gameRunning = false;
       cancelAnimationFrame(animationFrame);
-      const overlay = document.getElementById('gameOver');
-      overlay.style.display = 'block';
-      canvas.addEventListener('mousedown', restartGame);
-      canvas.addEventListener('touchstart', restartGame);
+      document.getElementById('gameOver').style.display = 'block';
+      container.addEventListener('mousedown', restartGame);
+      container.addEventListener('touchstart', restartGame);
     }
 
-    // Resize canvas to fill the screen while covering it (cropping if needed)
-    function resizeCanvas() {
-      // Use Math.max so the canvas scale factor fills the viewport
-      const scale = Math.max(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
-      canvas.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+    // Resize container using Math.min so the entire 320x480 is visible (letterboxing)
+    function resizeContainer() {
+      const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
+      container.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
     }
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    window.addEventListener("resize", resizeContainer);
+    resizeContainer();
 
-    // Start game
+    // Start the game
     initGame();
     gameLoop();
   </script>
