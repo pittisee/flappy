@@ -6,22 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flappy Clone</title>
   <style>
-    /* Reset defaults */
-    body, html {
+    /* Ensure html and body fill the screen completely */
+    html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
       background: #70c5ce;
       overflow: hidden;
     }
-    /* Responsive canvas */
+    /* Force the canvas to fill the entire viewport */
     #gameCanvas {
       display: block;
-      margin: auto;
-      width: 100vw;
-      height: auto;
-      max-height: 100vh;
+      width: 100%;
+      height: 100%;
     }
-    /* Game over overlay */
+    /* Game over overlay styling */
     #gameOver {
       position: absolute;
       top: 50%;
