@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flappy Clone</title>
   <style>
-    /* Ensure html and body fill the screen */
+    /* Fill the entire viewport */
     html, body {
       margin: 0;
       padding: 0;
@@ -15,15 +15,13 @@
       background: #70c5ce;
       overflow: hidden;
     }
-    /* The canvas is positioned absolutely and its scale is set via JS */
+    /* Keep intrinsic game resolution (320x480) and center it */
     #gameCanvas {
       position: absolute;
       left: 50%;
       top: 50%;
-      /* The intrinsic size remains 320x480 */
       width: 320px;
       height: 480px;
-      /* Remove default display issues */
       display: block;
     }
     /* Game over overlay styling */
@@ -47,13 +45,13 @@
   <div id="gameOver">Game Over<br><small>Tap anywhere to restart</small></div>
 
   <script>
-    // Game world dimensions (intrinsic resolution)
+    // Intrinsic game dimensions
     const GAME_WIDTH = 320;
     const GAME_HEIGHT = 480;
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Game constants (gravity reduced further: 0.35)
+    // Game constants (gravity further reduced to 0.35)
     const GRAVITY = 0.35;
     const JUMP_STRENGTH = 8;
     const PIPE_SPEED = 2.5;
@@ -65,7 +63,7 @@
     let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
     let highScore = 0;
 
-    // Create the bird object
+    // Create bird object
     function createBird() {
       return { x: 50, y: GAME_HEIGHT / 2, radius: 10, vy: 0 };
     }
@@ -76,7 +74,7 @@
       return { x: GAME_WIDTH, gapY: gapY };
     }
 
-    // Initialize or reset game state
+    // Initialize game state
     function initGame() {
       bird = createBird();
       pipes = [];
@@ -86,7 +84,7 @@
       document.getElementById('gameOver').style.display = 'none';
     }
 
-    // Restart game on tap after game over
+    // Restart game after game over
     function restartGame() {
       initGame();
       canvas.removeEventListener('mousedown', restartGame);
@@ -94,7 +92,7 @@
       gameLoop();
     }
 
-    // Handle user input – jump when tapped or clicked
+    // Handle user input (jump)
     function jump() {
       if (!gameRunning) return;
       bird.vy = -JUMP_STRENGTH;
@@ -114,29 +112,29 @@
       return (dx * dx + dy * dy) < (circle.radius * circle.radius);
     }
 
-    // Update game state per frame
+    // Update game state each frame
     function update(deltaTime) {
       bird.vy += GRAVITY;
       bird.y += bird.vy;
-
+      
       const now = performance.now();
       if (now - lastPipeTime > PIPE_INTERVAL) {
         pipes.push(createPipe());
         lastPipeTime = now;
       }
-
+      
       pipes.forEach(pipe => pipe.x -= PIPE_SPEED);
-
+      
       if (pipes.length && pipes[0].x < -PIPE_WIDTH) {
         pipes.shift();
         score++;
         if(score > highScore) highScore = score;
       }
-
+      
       if (bird.y + bird.radius > GAME_HEIGHT || bird.y - bird.radius < 0) {
         gameOver();
       }
-
+      
       for (let p of pipes) {
         if (
           circleRectCollision(bird, p.x, 0, PIPE_WIDTH, p.gapY) ||
@@ -152,18 +150,18 @@
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       ctx.fillStyle = "#70c5ce";
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
+      
       ctx.fillStyle = "#228B22";
       pipes.forEach(p => {
         ctx.fillRect(p.x, 0, PIPE_WIDTH, p.gapY);
         ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP);
       });
-
+      
       ctx.fillStyle = "#FF0";
       ctx.beginPath();
       ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
       ctx.fill();
-
+      
       ctx.fillStyle = "#fff";
       ctx.font = "16px sans-serif";
       ctx.fillText("Score: " + score, 10, 20);
@@ -177,13 +175,13 @@
       const now = performance.now();
       const deltaTime = now - lastTime;
       lastTime = now;
-
+      
       update(deltaTime);
       render();
       animationFrame = requestAnimationFrame(gameLoop);
     }
 
-    // Game over: stop loop, show overlay, and allow restart on tap
+    // Game over: stop loop, show overlay, allow restart on tap
     function gameOver() {
       gameRunning = false;
       cancelAnimationFrame(animationFrame);
@@ -193,13 +191,13 @@
       canvas.addEventListener('touchstart', restartGame);
     }
 
-    // Resize canvas proportionally using CSS transform
+    // Resize canvas to fill the screen while covering it (cropping if needed)
     function resizeCanvas() {
-      const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
+      // Use Math.max so the canvas scale factor fills the viewport
+      const scale = Math.max(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
       canvas.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
     }
     window.addEventListener("resize", resizeCanvas);
-    // Call initially to set scale
     resizeCanvas();
 
     // Start game
