@@ -2,28 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Set viewport to optimize for mobile devices -->
+  <!-- Optimize for mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flappy Clone</title>
   <style>
-    /* Reset some defaults */
+    /* Reset defaults */
     body, html {
       margin: 0;
       padding: 0;
-      background: #70c5ce; /* sky-blue background */
+      background: #70c5ce;
       overflow: hidden;
     }
-    /* Center the canvas and make it responsive */
+    /* Responsive canvas */
     #gameCanvas {
       display: block;
       margin: auto;
-      /* The canvas has an internal resolution of 320x480,
-         but we scale it to fill the width of the viewport while keeping the aspect ratio */
       width: 100vw;
       height: auto;
       max-height: 100vh;
     }
-    /* Optional: game over message styling */
+    /* Game over overlay */
     #gameOver {
       position: absolute;
       top: 50%;
@@ -35,31 +33,35 @@
       text-align: center;
       display: none;
       text-shadow: 2px 2px 4px #000;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="320" height="480"></canvas>
-  <div id="gameOver">Game Over<br><button id="restartBtn">Restart</button></div>
+  <div id="gameOver">Game Over<br><small>Tap anywhere to restart</small></div>
 
   <script>
-    // Game world size
+    // Game world dimensions
     const GAME_WIDTH = 320;
     const GAME_HEIGHT = 480;
-    // Get canvas and context
+    // Get canvas and its context
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Game state variables
-    let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
-    const GRAVITY = 0.5;
+    // Game constants (gravity reduced by 15%: 0.5 * 0.85 = 0.425)
+    const GRAVITY = 0.425;
     const JUMP_STRENGTH = 8;
     const PIPE_SPEED = 2.5;
     const PIPE_GAP = 120;
     const PIPE_WIDTH = 50;
-    const PIPE_INTERVAL = 1500; // ms
+    const PIPE_INTERVAL = 1500; // in ms
 
-    // Bird object
+    // Game state variables
+    let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
+    let highScore = 0; // persist highscore in memory
+
+    // Bird constructor
     function createBird() {
       return {
         x: 50,
@@ -69,9 +71,8 @@
       };
     }
 
-    // Pipe object: top and bottom
+    // Create a new pipe pair
     function createPipe() {
-      // Random gap position between 60 and GAME_HEIGHT-60
       const gapY = Math.random() * (GAME_HEIGHT - PIPE_GAP - 80) + 40;
       return {
         x: GAME_WIDTH,
@@ -79,7 +80,7 @@
       };
     }
 
-    // Initialize game state
+    // Initialize or reset game state
     function initGame() {
       bird = createBird();
       pipes = [];
@@ -89,13 +90,16 @@
       document.getElementById('gameOver').style.display = 'none';
     }
 
-    // Reset game on restart
-    document.getElementById('restartBtn').addEventListener('click', function() {
+    // Restart game on tap after game over
+    function restartGame() {
       initGame();
+      // Remove the restart listener if it exists
+      canvas.removeEventListener('mousedown', restartGame);
+      canvas.removeEventListener('touchstart', restartGame);
       gameLoop();
-    });
+    }
 
-    // Handle user input – works for both touch and click.
+    // Handle user input – jump when tapped or clicked
     function jump() {
       if (!gameRunning) return;
       bird.vy = -JUMP_STRENGTH;
@@ -106,60 +110,56 @@
       jump();
     });
 
-    // Collision detection helper: circle vs rectangle
+    // Collision detection: circle vs rectangle
     function circleRectCollision(circle, rectX, rectY, rectW, rectH) {
-      // Find the closest point to the circle within the rectangle
-      let closestX = Math.max(rectX, Math.min(circle.x, rectX + rectW));
-      let closestY = Math.max(rectY, Math.min(circle.y, rectY + rectH));
-      // Calculate the distance between the circle's center and this closest point
-      let dx = circle.x - closestX;
-      let dy = circle.y - closestY;
+      const closestX = Math.max(rectX, Math.min(circle.x, rectX + rectW));
+      const closestY = Math.max(rectY, Math.min(circle.y, rectY + rectH));
+      const dx = circle.x - closestX;
+      const dy = circle.y - closestY;
       return (dx * dx + dy * dy) < (circle.radius * circle.radius);
     }
 
-    // Update game state
+    // Update game state each frame
     function update(deltaTime) {
-      // Update bird
+      // Update bird physics
       bird.vy += GRAVITY;
       bird.y += bird.vy;
 
-      // Add new pipe if needed
+      // Create new pipes at intervals
       const now = performance.now();
       if (now - lastPipeTime > PIPE_INTERVAL) {
         pipes.push(createPipe());
         lastPipeTime = now;
       }
 
-      // Update pipes positions
-      for (let i = 0; i < pipes.length; i++) {
-        pipes[i].x -= PIPE_SPEED;
-      }
+      // Update pipes position
+      pipes.forEach(pipe => pipe.x -= PIPE_SPEED);
+      
       // Remove off-screen pipes and update score
       if (pipes.length && pipes[0].x < -PIPE_WIDTH) {
         pipes.shift();
         score++;
+        if(score > highScore) highScore = score;
       }
 
-      // Collision with ground or ceiling
+      // Check collisions with ground/ceiling
       if (bird.y + bird.radius > GAME_HEIGHT || bird.y - bird.radius < 0) {
         gameOver();
       }
 
-      // Collision with pipes
-      for (let i = 0; i < pipes.length; i++) {
-        let p = pipes[i];
-        // Top pipe rectangle: from (p.x, 0) to (p.x + PIPE_WIDTH, p.gapY)
-        // Bottom pipe rectangle: from (p.x, p.gapY + PIPE_GAP) to (p.x + PIPE_WIDTH, GAME_HEIGHT)
-        if (circleRectCollision(bird, p.x, 0, PIPE_WIDTH, p.gapY) ||
-            circleRectCollision(bird, p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP)) {
+      // Check collisions with pipes
+      for (let p of pipes) {
+        if (
+          circleRectCollision(bird, p.x, 0, PIPE_WIDTH, p.gapY) ||
+          circleRectCollision(bird, p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP)
+        ) {
           gameOver();
         }
       }
     }
 
-    // Draw game state
+    // Render the game state
     function render() {
-      // Clear canvas
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       // Draw background
       ctx.fillStyle = "#70c5ce";
@@ -167,11 +167,9 @@
 
       // Draw pipes
       ctx.fillStyle = "#228B22";
-      pipes.forEach(function(p) {
-        // Top pipe
-        ctx.fillRect(p.x, 0, PIPE_WIDTH, p.gapY);
-        // Bottom pipe
-        ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP);
+      pipes.forEach(p => {
+        ctx.fillRect(p.x, 0, PIPE_WIDTH, p.gapY); // top pipe
+        ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP); // bottom pipe
       });
 
       // Draw bird
@@ -180,32 +178,35 @@
       ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Draw score
+      // Draw score and highscore
       ctx.fillStyle = "#fff";
       ctx.font = "16px sans-serif";
       ctx.fillText("Score: " + score, 10, 20);
+      ctx.fillText("Highscore: " + highScore, 10, 40);
     }
 
     // Main game loop using requestAnimationFrame
     let lastTime = performance.now();
     function gameLoop() {
       if (!gameRunning) return;
-      let now = performance.now();
-      let deltaTime = now - lastTime;
+      const now = performance.now();
+      const deltaTime = now - lastTime;
       lastTime = now;
-
+      
       update(deltaTime);
       render();
-
       animationFrame = requestAnimationFrame(gameLoop);
     }
 
-    // Game over: stop the game loop and show game over message
+    // Game over: stop loop and show overlay; allow restart by tapping anywhere.
     function gameOver() {
       gameRunning = false;
       cancelAnimationFrame(animationFrame);
-      // Show Game Over overlay
-      document.getElementById('gameOver').style.display = 'block';
+      const overlay = document.getElementById('gameOver');
+      overlay.style.display = 'block';
+      // Add event listener to restart game on tap
+      canvas.addEventListener('mousedown', restartGame);
+      canvas.addEventListener('touchstart', restartGame);
     }
 
     // Start the game
