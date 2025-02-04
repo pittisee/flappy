@@ -73,6 +73,8 @@
     let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
     let highScore = 0;
     let gameStarted = false;         // New: game hasn't started until first tap
+    let lastTapTime = 0;
+    const TAP_COOLDOWN = 200; // milliseconds
 
     // Create the bird object
     function createBird() {
@@ -106,6 +108,10 @@
 
     // Handle user input – jump on tap/click
     function jump() {
+      const now = performance.now();
+      if (now - lastTapTime < TAP_COOLDOWN) return;
+      lastTapTime = now;
+
       if (!gameRunning) return;
       if (!gameStarted) {
         // Start the game on first tap: enable gravity
@@ -130,12 +136,11 @@
 
     // Update game state
     function update(deltaTime) {
-      // Only update bird physics if the game has started
       if (gameStarted) {
-        bird.vy += GRAVITY;
-        bird.y += bird.vy;
+        bird.vy += GRAVITY * (deltaTime / 1000);
+        bird.y += bird.vy * (deltaTime / 1000);
+        console.log(`Time: ${performance.now()}, Bird Y: ${bird.y}, Bird Vy: ${bird.vy}`);
       }
-      
       const now = performance.now();
       if (now - lastPipeTime > PIPE_INTERVAL) {
         pipes.push(createPipe());
