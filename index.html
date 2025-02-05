@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flappy Clone</title>
   <style>
-    /* Full viewport coverage */
+    /* Full viewport */
     html, body {
       margin: 0;
       padding: 0;
@@ -24,7 +24,7 @@
       height: 480px;
       transform-origin: center;
     }
-    /* Canvas uses the container’s intrinsic dimensions */
+    /* The canvas uses the container’s intrinsic dimensions */
     #gameCanvas {
       width: 320px;
       height: 480px;
@@ -61,19 +61,18 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Game constants 
-    // Gravity is set to 6.5, jump strength remains 4
+    // Game constants
     const GRAVITY = 6.5;
     const JUMP_STRENGTH = 4;
     const PIPE_SPEED = 2.5;
     const PIPE_GAP = 120;
     const PIPE_WIDTH = 50;
-    const PIPE_INTERVAL = 1500; // in ms
+    const PIPE_INTERVAL = 1500; // ms
 
     // Game state variables
     let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
     let highScore = 0;
-    let gameStarted = false; // Initially, the game has not started
+    let gameStarted = false; // Physics won't be applied until first tap
 
     // Create the bird object
     function createBird() {
@@ -93,33 +92,62 @@
       score = 0;
       lastPipeTime = performance.now();
       gameRunning = true;
-      gameStarted = false; // Physics will not run until first jump
+      gameStarted = false; // Wait for first tap to start gravity
       document.getElementById('gameOver').style.display = 'none';
+      // Ensure the container has the jump listeners for gameplay
+      addJumpListeners();
     }
 
-    // Restart game after game over
-    function restartGame() {
-      initGame();
-      container.removeEventListener('mousedown', restartGame);
-      container.removeEventListener('touchstart', restartGame);
-      lastTime = performance.now(); // Reset lastTime to avoid huge delta
-      gameLoop();
-    }
-
-    // Handle user input – jump on tap/click
+    // Jump event handlers – attached to container
     function jump() {
       if (!gameRunning) return;
       if (!gameStarted) {
-        // Start the game on first tap
         gameStarted = true;
       }
       bird.vy = -JUMP_STRENGTH;
     }
-    canvas.addEventListener('mousedown', jump);
-    canvas.addEventListener('touchstart', function(e) {
+
+    function onJumpMousedown(e) {
+      jump();
+    }
+    function onJumpTouchstart(e) {
       e.preventDefault();
       jump();
-    });
+    }
+
+    function addJumpListeners() {
+      container.addEventListener('mousedown', onJumpMousedown);
+      container.addEventListener('touchstart', onJumpTouchstart);
+    }
+    function removeJumpListeners() {
+      container.removeEventListener('mousedown', onJumpMousedown);
+      container.removeEventListener('touchstart', onJumpTouchstart);
+    }
+
+    // Restart game after game over – attached to container
+    function restartGame() {
+      // Remove restart listeners first
+      removeRestartListeners();
+      initGame();
+      lastTime = performance.now(); // Reset lastTime to avoid a huge delta
+      gameLoop();
+    }
+
+    function onRestartMousedown(e) {
+      restartGame();
+    }
+    function onRestartTouchstart(e) {
+      e.preventDefault();
+      restartGame();
+    }
+    function addRestartListeners() {
+      container.addEventListener('mousedown', onRestartMousedown);
+      container.addEventListener('touchstart', onRestartTouchstart);
+    }
+    function removeRestartListeners() {
+      container.removeEventListener('mousedown', onRestartMousedown);
+      container.removeEventListener('touchstart', onRestartTouchstart);
+    }
 
     // Collision detection: circle vs rectangle
     function circleRectCollision(circle, rectX, rectY, rectW, rectH) {
@@ -130,19 +158,16 @@
       return (dx * dx + dy * dy) < (circle.radius * circle.radius);
     }
 
-    // Update game state; deltaTime is in ms
+    // Update game state; deltaTime in ms
+    let lastTime = performance.now();
     function update(deltaTime) {
-      // Compute a delta-time factor based on a 60fps baseline (~16.67ms/frame)
-      let dtFactor = deltaTime / 16.67;
-      // Clamp to avoid extreme values
-      dtFactor = Math.min(dtFactor, 1.5);
+      let dtFactor = deltaTime / 16.67; // 60fps baseline
+      dtFactor = Math.min(dtFactor, 1.5); // Clamp to avoid spikes
       
       if (gameStarted) {
-        // Apply gravity and update bird position only when game has started
         bird.vy += GRAVITY * dtFactor;
         bird.y += bird.vy * dtFactor;
         
-        // Spawn and update pipes
         const now = performance.now();
         if (now - lastPipeTime > PIPE_INTERVAL) {
           pipes.push(createPipe());
@@ -155,7 +180,6 @@
           if (score > highScore) highScore = score;
         }
         
-        // Check collisions: ground/ceiling and pipes
         if (bird.y + bird.radius > GAME_HEIGHT || bird.y - bird.radius < 0) {
           gameOver();
         }
@@ -168,30 +192,26 @@
           }
         }
       }
-      // If game hasn't started, bird and pipes remain static.
+      // If game hasn't started, no physics updates occur.
     }
 
     // Render game state
     function render() {
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-      // Draw background
       ctx.fillStyle = "#70c5ce";
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       
-      // Draw pipes
       ctx.fillStyle = "#228B22";
       pipes.forEach(p => {
         ctx.fillRect(p.x, 0, PIPE_WIDTH, p.gapY);
         ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_WIDTH, GAME_HEIGHT - p.gapY - PIPE_GAP);
       });
       
-      // Draw bird
       ctx.fillStyle = "#FF0";
       ctx.beginPath();
       ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
       ctx.fill();
       
-      // Draw score and highscore
       ctx.fillStyle = "#fff";
       ctx.font = "16px sans-serif";
       ctx.fillText("Score: " + score, 10, 20);
@@ -199,7 +219,6 @@
     }
 
     // Main game loop using requestAnimationFrame
-    let lastTime = performance.now();
     function gameLoop() {
       if (!gameRunning) return;
       const now = performance.now();
@@ -210,16 +229,16 @@
       animationFrame = requestAnimationFrame(gameLoop);
     }
 
-    // Game over: stop loop, show overlay, allow restart on tap
+    // Game over: stop loop, show overlay, remove jump listeners, add restart listeners
     function gameOver() {
       gameRunning = false;
       cancelAnimationFrame(animationFrame);
       document.getElementById('gameOver').style.display = 'block';
-      container.addEventListener('mousedown', restartGame);
-      container.addEventListener('touchstart', restartGame);
+      removeJumpListeners();
+      addRestartListeners();
     }
 
-    // Resize container using Math.min so the entire 320x480 is visible (letterboxing)
+    // Resize container (letterboxing) so the entire 320x480 is visible
     function resizeContainer() {
       const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
       container.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
