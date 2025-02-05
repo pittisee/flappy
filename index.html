@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Flappy Clone</title>
   <style>
-    /* Full viewport */
+    /* Full viewport coverage */
     html, body {
       margin: 0;
       padding: 0;
@@ -61,7 +61,7 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Game constants
+    // Game constants 
     const GRAVITY = 6.5;
     const JUMP_STRENGTH = 4;
     const PIPE_SPEED = 2.5;
@@ -72,7 +72,7 @@
     // Game state variables
     let bird, pipes, score, lastPipeTime, gameRunning, animationFrame;
     let highScore = 0;
-    let gameStarted = false; // Physics won't be applied until first tap
+    let gameStarted = false; // Wait until the first tap to start physics
 
     // Create the bird object
     function createBird() {
@@ -92,13 +92,12 @@
       score = 0;
       lastPipeTime = performance.now();
       gameRunning = true;
-      gameStarted = false; // Wait for first tap to start gravity
+      gameStarted = false; // Physics will not run until the first jump
       document.getElementById('gameOver').style.display = 'none';
-      // Ensure the container has the jump listeners for gameplay
       addJumpListeners();
     }
 
-    // Jump event handlers – attached to container
+    // Jump function – triggered on pointerdown
     function jump() {
       if (!gameRunning) return;
       if (!gameStarted) {
@@ -107,46 +106,26 @@
       bird.vy = -JUMP_STRENGTH;
     }
 
-    function onJumpMousedown(e) {
-      jump();
-    }
-    function onJumpTouchstart(e) {
-      e.preventDefault();
-      jump();
-    }
-
+    // Use pointer events for jump; attach to container
     function addJumpListeners() {
-      container.addEventListener('mousedown', onJumpMousedown);
-      container.addEventListener('touchstart', onJumpTouchstart);
+      container.addEventListener('pointerdown', jump);
     }
     function removeJumpListeners() {
-      container.removeEventListener('mousedown', onJumpMousedown);
-      container.removeEventListener('touchstart', onJumpTouchstart);
+      container.removeEventListener('pointerdown', jump);
     }
 
-    // Restart game after game over – attached to container
+    // Restart game after game over
     function restartGame() {
-      // Remove restart listeners first
       removeRestartListeners();
       initGame();
       lastTime = performance.now(); // Reset lastTime to avoid a huge delta
       gameLoop();
     }
-
-    function onRestartMousedown(e) {
-      restartGame();
-    }
-    function onRestartTouchstart(e) {
-      e.preventDefault();
-      restartGame();
-    }
     function addRestartListeners() {
-      container.addEventListener('mousedown', onRestartMousedown);
-      container.addEventListener('touchstart', onRestartTouchstart);
+      container.addEventListener('pointerdown', restartGame);
     }
     function removeRestartListeners() {
-      container.removeEventListener('mousedown', onRestartMousedown);
-      container.removeEventListener('touchstart', onRestartTouchstart);
+      container.removeEventListener('pointerdown', restartGame);
     }
 
     // Collision detection: circle vs rectangle
@@ -158,7 +137,7 @@
       return (dx * dx + dy * dy) < (circle.radius * circle.radius);
     }
 
-    // Update game state; deltaTime in ms
+    // Update game state; deltaTime is in ms
     let lastTime = performance.now();
     function update(deltaTime) {
       let dtFactor = deltaTime / 16.67; // 60fps baseline
@@ -192,7 +171,7 @@
           }
         }
       }
-      // If game hasn't started, no physics updates occur.
+      // If game hasn't started, do not update bird or pipes.
     }
 
     // Render game state
@@ -238,7 +217,7 @@
       addRestartListeners();
     }
 
-    // Resize container (letterboxing) so the entire 320x480 is visible
+    // Resize container using Math.min so the entire 320x480 is visible (letterboxing)
     function resizeContainer() {
       const scale = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT);
       container.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
